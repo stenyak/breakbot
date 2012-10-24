@@ -11,7 +11,6 @@ class Timestamp():
         else:
             self.time = time.time()  #long
     def __str__(self):
-        # in microseconds
         return str(self.ms_int())
     def ms_int(self):
         return int(round(self.time * 1000 * 1000))
