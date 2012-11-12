@@ -22,7 +22,7 @@ class Bot(threading.Thread):
         self.must_run = False
         self.irc_i = IRCInterface("irc.freenode.net", 6667, "my_bot", ["#sample_room"], self.irc_msg_received, self.stop)
         DEFAULT_CONFIG = os.path.expanduser("~")+"/.yowsup/auth"
-        self.wa_i = WAInterface(DEFAULT_CONFIG, self.wa_msg_received, self.stop)
+        self.wa_i = WAInterface("34555555125", "", self.wa_msg_received, self.stop)
     def run(self):
         self.must_run = True
         self.irc_i.start()
