@@ -26,8 +26,8 @@ class Bot(threading.Thread):
         self.must_run = False
         self.irc_server = irc_server
         self.irc_port = irc_port
-        irc_nick = groups[wa_phone]
         self.wa_phone = wa_phone
+        irc_nick = groups[wa_phone]
         self.irc_nick = irc_nick
         self.wa_identifier = wa_identifier
         self.groups = groups
@@ -42,7 +42,7 @@ class Bot(threading.Thread):
                 self.irc_i.stop()
                 self.wa_i.stop()
                 return
-            time.sleep(0.2)
+            time.sleep(0.5)
         print "All connected!"
 
         while self.must_run:
@@ -65,11 +65,12 @@ class Bot(threading.Thread):
     def wa_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
         print " <<< Received WA message: %s" %message
-
-        nick = message.get_nick()
-        msg = "<%s> %s" %(message.get_nick(), message.msg)
-        if message.chan == self.wa_chat:  #TODO what chan?
-            self.irc_i.send(self.irc_channel, "%s" %msg)
+        try:
+            nick = message.get_nick()
+            msg = "<%s> %s" %(self.groups[message.get_nick()], message.msg)
+            self.irc_i.send(self.groups[message.chan], "%s" %msg)
+        except Exception,e:
+            print "Not sending message: %s" %e
 
 
 groups = {
