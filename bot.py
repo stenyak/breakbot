@@ -13,14 +13,26 @@ def store_msg(message, file_path=None):
     text = message.serialize() + "\n"
     with open(file_path, "a") as log:
         log.write(text)
-
+def channels_from_groups(groups):
+    channels = []
+    for k,v in groups.items():
+        if v.startswith("#"):
+            channels.append(v)
+    return channels
     
 class Bot(threading.Thread):
-    def __init__(self):
+    def __init__(self, wa_phone, wa_identifier, groups, irc_server, irc_port):
         threading.Thread.__init__(self)
         self.must_run = False
-        self.irc_i = IRCInterface("irc.freenode.net", 6667, "my_bot", "#sample_room", self.irc_msg_received, self.stop)
-        self.wa_i = WAInterface("34555555125", "", self.wa_msg_received, self.stop)
+        self.irc_server = irc_server
+        self.irc_port = irc_port
+        irc_nick = groups[wa_phone]
+        self.wa_phone = wa_phone
+        self.irc_nick = irc_nick
+        self.wa_identifier = wa_identifier
+        self.groups = groups
+        self.irc_i = IRCInterface(self.irc_server, self.irc_port, self.irc_nick, channels_from_groups(self.groups), self.irc_msg_received, self.stop)
+        self.wa_i = WAInterface(self.wa_phone, self.wa_identifier, self.wa_msg_received, self.stop)
     def run(self):
         self.must_run = True
         self.irc_i.start()
@@ -31,7 +43,6 @@ class Bot(threading.Thread):
                 self.wa_i.stop()
                 return
             time.sleep(0.2)
-        self.irc_i.send("#sample_room", "test")
         print "All connected!"
 
         while self.must_run:
@@ -44,23 +55,34 @@ class Bot(threading.Thread):
 
     def irc_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
-        print " >>> Received IRC message: %s" %message
-        msg = "<%s> %s" %(message.nick, message.msg)
-        if message.chan == "#sample_room":
-            self.wa_i.send("34555555373", "%s" %msg)
+        print " <<< Received IRC message: %s" %message
+
+        msg = "<%s> %s" %(message.get_nick(), message.msg)
+        if message.chan == self.irc_channel:
+            self.wa_i.send(self.wa_chat, "%s" %msg)
+            #self.wa_i.send("34555555373@s.whatsapp.net", "%s" %msg)
 
     def wa_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
-        print " >>> Received WA message: %s" %message
-        msg = "<%s> %s" %(message.nick, message.msg)
-        if message.chan == "34555555125":
-            self.irc_i.send("#sample_room", "%s" %msg)
+        print " <<< Received WA message: %s" %message
+
+        nick = message.get_nick()
+        msg = "<%s> %s" %(message.get_nick(), message.msg)
+        if message.chan == self.wa_chat:  #TODO what chan?
+            self.irc_i.send(self.irc_channel, "%s" %msg)
 
 
-
+groups = {
+    "34555555125": "my_bot"
+   ,"34555555373": "person1"
+   ,"34555555530": "person2"
+   ,"34555555373-1352752705@g.us": "#sample_room"
+   ,"34555555530-1321985629@g.us": "#sample_room2"
+}
+print "%s" %groups
 
 print "Program started"
-b = Bot()
+b = Bot("34555555125", "", groups, "irc.freenode.net", 6667)
 try:
     b.run()
 except KeyboardInterrupt:

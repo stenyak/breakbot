@@ -18,17 +18,35 @@ class WAInterface(threading.Thread):
         self.stopped_handler = stopped_handler
         self.username = username
         self.identity = identity
+    def wait_connected(self):
+        while not self.connected:
+            if not self.must_run:
+                raise Exception("Interrupting because it must not run")
+            time.sleep(0.1)
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt):
         try:
-            message = Message(jid, self.username, messageContent)
+            print "simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent)
+            message = Message("wa", jid, self.username, messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
-            message.nick = jid.split("@")[0]
             self.msg_handler(message)
+            sendReceipts = True
+            if wantsReceipt and sendReceipts:
+                self.wait_connected()
+                self.methodsInterface.call("message_ack", (jid, messageId))
         except Exception,e:
             print "Error while handling message: %s" %e
-        sendReceipts = False
-        if wantsReceipt and sendReceipts:
-            self.methodsInterface.call("message_ack", (jid, messageId))
+    def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt):
+        try:
+            print "group messageId %s, jid %s, author %s, content %s" %(messageId, jid, author, messageContent)
+            message = Message("wa", author, jid, messageContent)
+            message.time = Timestamp(ms_int = timestamp*1000)
+            self.msg_handler(message)
+            sendReceipts = True
+            if wantsReceipt and sendReceipts:
+                self.wait_connected()
+                self.methodsInterface.call("message_ack", (jid, messageId))
+        except Exception,e:
+            print "Error while handling message: %s" %e
 
     def run(self):
         try:
@@ -39,6 +57,7 @@ class WAInterface(threading.Thread):
             self.signalsInterface = self.cm.getSignalsInterface()
             self.methodsInterface = self.cm.getMethodsInterface()
             self.signalsInterface.registerListener("message_received", self.onMessageReceived)
+            self.signalsInterface.registerListener("group_messageReceived", self.onGroup_MessageReceived)
             self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
             self.signalsInterface.registerListener("auth_fail", self.onAuthFailed)
             self.signalsInterface.registerListener("disconnected", self.onDisconnected)
@@ -47,10 +66,7 @@ class WAInterface(threading.Thread):
             self.signalsInterface.registerListener("ping", self.onPing)
 
             self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
-            while not self.connected:
-                if not self.must_run:
-                    return
-                time.sleep(0.1)
+            self.wait_connected()
             print "WA: connected as %s" %self.username
             while self.must_run:
                 time.sleep(0.5)
@@ -62,8 +78,8 @@ class WAInterface(threading.Thread):
         self.stopped_handler()
     def stop(self):
         self.must_run = False
-    def send(self, phone, text):
-        target = "%s@s.whatsapp.net"%phone
+    def send(self, target, text):
+        self.wait_connected()
         self.methodsInterface.call("message_send", (target, text))
         print " >>> Sent WA message: %s: %s" %(target, text)
     def onAuthSuccess(self, username):
@@ -78,9 +94,11 @@ class WAInterface(threading.Thread):
         print "Message was sent successfully to %s" % jid
     def onMessageDelivered(self, jid, messageId):
         print "Message was delivered successfully to %s" %jid
+        self.wait_connected()
         self.methodsInterface.call("delivered_ack", (jid, messageId))
     def onPing(self, pingId):
         print "ponging to %s" %pingId
+        self.wait_connected()
         self.methodsInterface.call("pong", (pingId,))
 
 

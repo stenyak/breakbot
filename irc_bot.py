@@ -11,7 +11,7 @@ from message import Message
 class Handler(DefaultCommandHandler):
     # Handle messages (the PRIVMSG command, note lower case)
     def privmsg(self, nick_full, chan, msg):
-        m = Message(nick_full, chan, msg)
+        m = Message("irc", nick_full, chan, msg)
         try:
             self.irc_interface.msg_handler(m)
         except:
@@ -22,7 +22,7 @@ class Handler(DefaultCommandHandler):
         self.irc_interface.joined(channel)
 
 class IRCInterface(threading.Thread):
-    def __init__(self, server, port, nick, channel, msg_handler, stopped_handler):
+    def __init__(self, server, port, nick, channels, msg_handler, stopped_handler):
         threading.Thread.__init__(self)
         self.must_run = False
         self.connected = False
@@ -31,15 +31,24 @@ class IRCInterface(threading.Thread):
         self.nick = nick
         self.host = server
         self.port = port
-        self.channel = channel
-        self.channel_joined = False
+        self.channels = channels
+        self.channels_joined = {}
+        for c in self.channels:
+            self.channels_joined[c] = False
         self.cli = IRCClient(Handler, host=self.host, port=self.port, nick=self.nick, connect_cb=self.connect_callback)
         self.cli.command_handler.set_irc_interface(self)
     def connect_callback(self, cli):
         print "Connected to IRC"
         self.server_connected = True
+    def pending_channels(self):
+        result = True
+        for k,v in self.channels_joined.items():
+            if not v:
+                result = False
+                break
+        return result
     def joined(self, channel):
-        self.channel_joined = True
+        self.channels_joined[channel] = True
         print "Joined channel %s" %channel
     def connect(self):
         print "Connecting to server"
@@ -51,21 +60,25 @@ class IRCInterface(threading.Thread):
             conn.next()
         print "Connected to server"
         return conn
-    def join(self, conn, channel):
-        print "Joining channel"
-        self.cli.send("JOIN", channel)
-        while not self.channel_joined:
-            if not self.must_run:
-                raise Exception("Must stop")
-            conn.next()
-        print "Joined channel"
+    def join_channels(self, conn):
+        for c in self.channels:
+            print "Joining channel %s" %c
+            self.cli.send("JOIN", c)
+            while self.pending_channels():
+                if not self.must_run:
+                    raise Exception("Must stop")
+                conn.next()
 
     def run(self):
         try:
             self.must_run = True
             print "IRC: %s connecting to %s:%s" %(self.nick, self.host, self.port)
             conn = self.connect()
-            self.join(conn, self.channel)
+            self.join_channels(conn)
+            while not self.pending_channels():
+                if not self.must_run:
+                    raise Exception("Must stop")
+                conn.next()
             self.connected = True
             print "IRC: %s connected to %s:%s" %(self.nick, self.host, self.port)
             while self.must_run:
@@ -74,7 +87,7 @@ class IRCInterface(threading.Thread):
             print "IRC: %s disconnected from %s:%s" %(self.nick, self.host, self.port)
             self.connected = False
             self.stopped_handler()
-        except Exception,e:
+        except:
             print traceback.format_exc()
     def stop(self):
         self.must_run = False
@@ -82,4 +95,3 @@ class IRCInterface(threading.Thread):
         print " >>> Sending IRC message: %s: %s" %(channel, text)
         msg = "PRIVMSG %s :%s" %(channel, text)
         self.cli.send(msg)
-        print " >>> Sent    IRC message: %s: %s" %(channel, text)
