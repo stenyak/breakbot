@@ -13,25 +13,25 @@ def store_msg(message, file_path=None):
     text = message.serialize() + "\n"
     with open(file_path, "a") as log:
         log.write(text)
-def channels_from_groups(groups):
+def channels_from_contacts(contacts):
     channels = []
-    for k,v in groups.items():
+    for k,v in contacts.items():
         if v.startswith("#"):
             channels.append(v)
     return channels
     
 class Bot(threading.Thread):
-    def __init__(self, wa_phone, wa_identifier, groups, irc_server, irc_port):
+    def __init__(self, wa_phone, wa_identifier, contacts, irc_server, irc_port):
         threading.Thread.__init__(self)
         self.must_run = False
         self.irc_server = irc_server
         self.irc_port = irc_port
         self.wa_phone = wa_phone
-        irc_nick = groups[wa_phone]
+        irc_nick = contacts[wa_phone]
         self.irc_nick = irc_nick
         self.wa_identifier = wa_identifier
-        self.groups = groups
-        self.irc_i = IRCInterface(self.irc_server, self.irc_port, self.irc_nick, channels_from_groups(self.groups), self.irc_msg_received, self.stop)
+        self.contacts = contacts
+        self.irc_i = IRCInterface(self.irc_server, self.irc_port, self.irc_nick, channels_from_contacts(self.contacts), self.irc_msg_received, self.stop)
         self.wa_i = WAInterface(self.wa_phone, self.wa_identifier, self.wa_msg_received, self.stop)
     def run(self):
         self.must_run = True
@@ -54,8 +54,8 @@ class Bot(threading.Thread):
         self.must_run = False
 
     def irc_msg_received(self, message):
-        def get_group_from_chan(groups, irc_channel):
-            for k,v in groups.items():
+        def get_group_from_chan(contacts, irc_channel):
+            for k,v in contacts.items():
                 if v == irc_channel:
                     return k
             raise Exception("Channel not found in contact list")
@@ -65,7 +65,7 @@ class Bot(threading.Thread):
 
         msg = "<%s> %s" %(message.get_nick(), message.msg)
         try:
-            group = get_group_from_chan(self.groups, message.chan)
+            group = get_group_from_chan(self.contacts, message.chan)
             self.wa_i.send(group, msg)
         except Exception,e:
             print "Channel %s not recognized: %s" %(message.chan, e)
@@ -75,17 +75,17 @@ class Bot(threading.Thread):
         store_msg(message, "/tmp/log.txt")
         print " <<< Received WA message: %s" %message
         try:
-            msg = "<%s> %s" %(self.groups[message.get_nick()], message.msg)
+            msg = "<%s> %s" %(self.contacts[message.get_nick()], message.msg)
         except Exception,e:
             print "Contact not recognized: %s" %e
             msg = "<%s> %s" %(message.get_nick(), message.msg)
         try:
-            self.irc_i.send(self.groups[message.chan], msg)
+            self.irc_i.send(self.contacts[message.chan], msg)
         except Exception,e:
             print "Channel %s not recognized: %s" %(message.chan, e)
 
 
-groups = {
+contacts = {
     "34555555125": "my_bot"
    ,"34555555373": "person1"
    ,"34555555530": "person2"
@@ -94,10 +94,10 @@ groups = {
    ,"34555555373-1352752705@g.us": "#sample_room"
    ,"34555555530-1321985629@g.us": "#sample_room2"
 }
-print "%s" %groups
+print "%s" %contacts
 
 print "Program started"
-b = Bot("34555555125", "", groups, "irc.freenode.net", 6667)
+b = Bot("34555555125", "", contacts, "irc.freenode.net", 6667)
 try:
     b.run()
 except KeyboardInterrupt:
