@@ -54,23 +54,35 @@ class Bot(threading.Thread):
         self.must_run = False
 
     def irc_msg_received(self, message):
+        def get_group_from_chan(groups, irc_channel):
+            for k,v in groups.items():
+                if v == irc_channel:
+                    return k
+            raise Exception("Channel not found in contact list")
+
         store_msg(message, "/tmp/log.txt")
         print " <<< Received IRC message: %s" %message
 
         msg = "<%s> %s" %(message.get_nick(), message.msg)
-        if message.chan == self.irc_channel:
-            self.wa_i.send(self.wa_chat, "%s" %msg)
-            #self.wa_i.send("34555555373@s.whatsapp.net", "%s" %msg)
+        try:
+            group = get_group_from_chan(self.groups, message.chan)
+            self.wa_i.send(group, msg)
+        except Exception,e:
+            print "Channel %s not recognized: %s" %(message.chan, e)
+
 
     def wa_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
         print " <<< Received WA message: %s" %message
         try:
-            nick = message.get_nick()
             msg = "<%s> %s" %(self.groups[message.get_nick()], message.msg)
-            self.irc_i.send(self.groups[message.chan], "%s" %msg)
         except Exception,e:
-            print "Not sending message: %s" %e
+            print "Contact not recognized: %s" %e
+            msg = "<%s> %s" %(message.get_nick(), message.msg)
+        try:
+            self.irc_i.send(self.groups[message.chan], msg)
+        except Exception,e:
+            print "Channel %s not recognized: %s" %(message.chan, e)
 
 
 groups = {
