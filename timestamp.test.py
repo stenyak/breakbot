@@ -55,7 +55,7 @@ class TestTimestamp(unittest.TestCase):
         self.assertEqual(t.ms_int(), t2.ms_int())
 
         t3 = Timestamp(ms_str = str(t))
-        self.assertEqual(t.ms_int(), t2.ms_int())
+        self.assertEqual(t.ms_int(), t3.ms_int())
 
 
 if __name__ == '__main__':
