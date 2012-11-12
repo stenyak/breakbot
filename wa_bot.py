@@ -18,6 +18,19 @@ class WAInterface(threading.Thread):
         self.stopped_handler = stopped_handler
         self.username = username
         self.identity = identity
+        self.cm = YowsupConnectionManager()
+        self.cm.setAutoPong(True)
+        self.signalsInterface = self.cm.getSignalsInterface()
+        self.methodsInterface = self.cm.getMethodsInterface()
+        self.signalsInterface.registerListener("message_received", self.onMessageReceived)
+        self.signalsInterface.registerListener("group_messageReceived", self.onGroup_MessageReceived)
+        self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
+        self.signalsInterface.registerListener("auth_fail", self.onAuthFailed)
+        self.signalsInterface.registerListener("disconnected", self.onDisconnected)
+        self.signalsInterface.registerListener("receipt_messageSent", self.onMessageSent)
+        self.signalsInterface.registerListener("receipt_messageDelivered", self.onMessageDelivered)
+        self.signalsInterface.registerListener("ping", self.onPing)
+
     def wait_connected(self):
         while not self.connected:
             if not self.must_run:
@@ -52,23 +65,12 @@ class WAInterface(threading.Thread):
         try:
             print "WA: connecting as %s" %self.username
             self.must_run = True
-            self.cm = YowsupConnectionManager()
-            self.cm.setAutoPong(True)
-            self.signalsInterface = self.cm.getSignalsInterface()
-            self.methodsInterface = self.cm.getMethodsInterface()
-            self.signalsInterface.registerListener("message_received", self.onMessageReceived)
-            self.signalsInterface.registerListener("group_messageReceived", self.onGroup_MessageReceived)
-            self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
-            self.signalsInterface.registerListener("auth_fail", self.onAuthFailed)
-            self.signalsInterface.registerListener("disconnected", self.onDisconnected)
-            self.signalsInterface.registerListener("receipt_messageSent", self.onMessageSent)
-            self.signalsInterface.registerListener("receipt_messageDelivered", self.onMessageDelivered)
-            self.signalsInterface.registerListener("ping", self.onPing)
-
             self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
             self.wait_connected()
             print "WA: connected as %s" %self.username
             while self.must_run:
+                if not self.connected:
+                    self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
                 time.sleep(0.5)
                 #raw_input()
         except Exception, e:
@@ -90,10 +92,11 @@ class WAInterface(threading.Thread):
         print "Auth Failed!"
     def onDisconnected(self, reason):
         print "Disconnected because %s" %reason
+        self.connected = False
     def onMessageSent(self, jid, messageId):
-        print "Message was sent successfully to %s" % jid
+        print "Message successfully sent to %s" % jid
     def onMessageDelivered(self, jid, messageId):
-        print "Message was delivered successfully to %s" %jid
+        print "Message successfully delivered to %s" %jid
         self.wait_connected()
         self.methodsInterface.call("delivered_ack", (jid, messageId))
     def onPing(self, pingId):
