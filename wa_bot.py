@@ -5,17 +5,14 @@ import threading
 from message import Message
 from timestamp import Timestamp
 
-from yowsup.Examples import ListenerClient as ListenerClient
-from yowsup.Examples.CmdClient import WhatsappCmdClient as WhatsappCmdClient
-from yowsup.Yowsup.Tools.utilities import Utilities
-from yowsup.Yowsup.connectionmanager import YowsupConnectionManager
-import os
-import datetime
+from Yowsup.Tools.utilities import Utilities
+from Yowsup.connectionmanager import YowsupConnectionManager
 import time
 
 class WAInterface(threading.Thread):
     def __init__(self, username, identity, msg_handler, stopped_handler):
         threading.Thread.__init__(self)
+        self.connected = False
         self.must_run = False
         self.msg_handler = msg_handler
         self.stopped_handler = stopped_handler
@@ -23,45 +20,68 @@ class WAInterface(threading.Thread):
         self.identity = identity
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt):
         try:
-            message = Message(self.username, jid, messageContent)
+            message = Message(jid, self.username, messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
+            message.nick = jid.split("@")[0]
             self.msg_handler(message)
         except Exception,e:
             print "Error while handling message: %s" %e
-        wantsReceipt = False
         sendReceipts = False
         if wantsReceipt and sendReceipts:
             self.methodsInterface.call("message_ack", (jid, messageId))
 
     def run(self):
-        self.must_run = True
-        connectionManager = YowsupConnectionManager()
-        connectionManager.setAutoPong(True)
-        self.signalsInterface = connectionManager.getSignalsInterface()
-        self.methodsInterface = connectionManager.getMethodsInterface()
-        self.signalsInterface.registerListener("message_received", self.onMessageReceived)
-        self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
-        self.signalsInterface.registerListener("auth_fail", self.onAuthFailed)
-        self.signalsInterface.registerListener("disconnected", self.onDisconnected)
-        self.cm = connectionManager
-        self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
-        while self.must_run:
-            raw_input()
+        try:
+            print "WA: connecting as %s" %self.username
+            self.must_run = True
+            self.cm = YowsupConnectionManager()
+            self.cm.setAutoPong(True)
+            self.signalsInterface = self.cm.getSignalsInterface()
+            self.methodsInterface = self.cm.getMethodsInterface()
+            self.signalsInterface.registerListener("message_received", self.onMessageReceived)
+            self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
+            self.signalsInterface.registerListener("auth_fail", self.onAuthFailed)
+            self.signalsInterface.registerListener("disconnected", self.onDisconnected)
+            self.signalsInterface.registerListener("receipt_messageSent", self.onMessageSent)
+            self.signalsInterface.registerListener("receipt_messageDelivered", self.onMessageDelivered)
+            self.signalsInterface.registerListener("ping", self.onPing)
+
+            self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
+            while not self.connected:
+                if not self.must_run:
+                    return
+                time.sleep(0.1)
+            print "WA: connected as %s" %self.username
+            while self.must_run:
+                time.sleep(0.5)
+                #raw_input()
+        except Exception, e:
+            print "Error in WA loop: %s" %e
+        print "WA: disconnected"
+        self.connected = False
         self.stopped_handler()
     def stop(self):
         self.must_run = False
-    def send(self, target, text):
-        print " >>> Sending WA message: %s" %message
-        message = ("%s@s.whatsapp.net"%target, text)
-        self.wa.methodsInterface.call("message_id", message)
-        print " >>> Sent!"
-        print " >>> Sending WA message: %s" %message
+    def send(self, phone, text):
+        target = "%s@s.whatsapp.net"%phone
+        self.methodsInterface.call("message_send", (target, text))
+        print " >>> Sent WA message: %s: %s" %(target, text)
     def onAuthSuccess(self, username):
         print "Authed %s" % username
+        self.connected = True
         self.methodsInterface.call("ready")
     def onAuthFailed(self, username, err):
         print "Auth Failed!"
     def onDisconnected(self, reason):
         print "Disconnected because %s" %reason
+    def onMessageSent(self, jid, messageId):
+        print "Message was sent successfully to %s" % jid
+    def onMessageDelivered(self, jid, messageId):
+        print "Message was delivered successfully to %s" %jid
+        self.methodsInterface.call("delivered_ack", (jid, messageId))
+    def onPing(self, pingId):
+        print "ponging to %s" %pingId
+        self.methodsInterface.call("pong", (pingId,))
+
 
 
