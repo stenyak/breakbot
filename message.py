@@ -18,8 +18,9 @@ class Message():
             self.target = None
             try:
                 split = msg.split(":", 1)
-                msg = split[1].lstrip()
-                self.target = split[0]
+                if len(split) == 2:
+                    self.target = split[0]
+                    msg = split[1].lstrip()
             except IndexError:
                 pass
         else:
