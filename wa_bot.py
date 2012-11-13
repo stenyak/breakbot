@@ -39,7 +39,7 @@ class WAInterface(threading.Thread):
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt):
         try:
             print "simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent)
-            message = Message("wa", jid, self.username, messageContent)
+            message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
             self.msg_handler(message)
             sendReceipts = True
@@ -50,8 +50,7 @@ class WAInterface(threading.Thread):
             print "Error while handling message: %s" %e
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt):
         try:
-            print "group messageId %s, jid %s, author %s, content %s" %(messageId, jid, author, messageContent)
-            message = Message("wa", author, jid, messageContent)
+            message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
             self.msg_handler(message)
             sendReceipts = True
