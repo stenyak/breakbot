@@ -57,19 +57,19 @@ class Bot(threading.Thread):
         self.irc_i.stop()
         self.wa_i.stop()
 
-    def irc_msg_received(self, message):
-        def get_group_from_chan(contacts, irc_channel):
-            for k,v in contacts.items():
-                if v == irc_channel:
-                    return k
-            raise Exception("Channel not found in contact list")
+    def get_group_from_chan(self, contacts, irc_channel):
+        for k,v in contacts.items():
+            if v == irc_channel:
+                return k
+        raise Exception("Channel not found in contact list")
 
+    def irc_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
         logger.info(" <<< Received IRC message: %s" %message)
 
         msg = "<%s> %s" %(message.get_nick(), message.msg)
         try:
-            group = get_group_from_chan(self.contacts, message.chan)
+            group = self.get_group_from_chan(self.contacts, message.chan)
             self.wa_i.send(group, msg)
         except Exception,e:
             logger.info("Channel %s not recognized: %s" %(message.chan, e))
@@ -84,16 +84,16 @@ class Bot(threading.Thread):
                 # directed to bot itself
                 nick = self.contacts[message.get_nick()]
                 msg = "<%s> %s" %(nick, message.msg)
-                self.irc_i.send("#botdebug", message.msg)  #TODO: lookup
+                self.irc_i.send("person1", message.msg)  #TODO: lookup human IRC nick
             else:
                 # directed to someone
                 try:
                     phone = message.get_nick()
                     nick = self.contacts[phone]
-                    target = message.target # get IRC nick from contacts
-                                            # if not already a nick
+                    target = self.get_group_from_chan(self.contacts, message.target)
                     msg = "<%s> %s" %(target, message.msg)
                     self.irc_i.send("#botdebug", msg)
+                    self.irc_i.send(target, msg)  #TODO: lookup human IRC nick
                 except Exception,e:
                     logger.info("Couldn't relay directed WA msg to IRC: %s" %(e))
         else:
