@@ -3,6 +3,8 @@
 # This software is released under the GNU AFFERO GENERAL PUBLIC LICENSE (see agpl-3.0.txt or www.gnu.org/licenses/agpl-3.0.html)
 import threading
 import time
+from log import Log
+logger = Log("IRC")
 
 import traceback
 from oyoyo.client import IRCClient
@@ -49,20 +51,20 @@ class IRCInterface(threading.Thread):
         return result
     def joined(self, channel):
         self.channels_joined[channel] = True
-        print "Joined channel %s" %channel
+        logger.info("Joined channel %s" %channel)
     def connect(self):
-        print "Connecting to server"
+        logger.info("Connecting to server")
         self.server_connected = False
         conn = self.cli.connect()
         while not self.server_connected:
             if not self.must_run:
                 raise Exception("Must stop")
             conn.next()
-        print "Connected to server"
+        logger.info("Connected to server")
         return conn
     def join_channels(self, conn):
         for c in self.channels:
-            print "Joining channel %s" %c
+            logger.info("Joining channel %s" %c)
             self.cli.send("JOIN", c)
             while self.pending_channels():
                 if not self.must_run:
@@ -72,7 +74,7 @@ class IRCInterface(threading.Thread):
     def run(self):
         try:
             self.must_run = True
-            print "IRC: %s connecting to %s:%s" %(self.nick, self.host, self.port)
+            logger.info("%s connecting to %s:%s" %(self.nick, self.host, self.port))
             conn = self.connect()
             self.join_channels(conn)
             while not self.pending_channels():
@@ -80,20 +82,20 @@ class IRCInterface(threading.Thread):
                     raise Exception("Must stop")
                 conn.next()
             self.connected = True
-            print "IRC: %s connected to %s:%s" %(self.nick, self.host, self.port)
+            logger.info("%s connected to %s:%s" %(self.nick, self.host, self.port))
             while self.must_run:
                 conn.next()
             self.cli.send("QUIT :a la mieeerrrrda")
-            print "IRC: %s disconnected from %s:%s" %(self.nick, self.host, self.port)
+            logger.info("%s disconnected from %s:%s" %(self.nick, self.host, self.port))
             self.connected = False
             self.stopped_handler()
             self.must_run = False
         except:
-            print traceback.format_exc()
+            logger.info("Error in main loop: %s" %traceback.format_exc())
     def stop(self):
         self.must_run = False
     def send(self, channel, text):
-        print " >>> Sending IRC message: %s: %s" %(channel, text)
+        logger.info(" >>> Sending IRC message: %s: %s" %(channel, text))
         msg = "PRIVMSG %s :%s" %(channel, text)
         self.cli.send(msg)
     def wait_connected(self):

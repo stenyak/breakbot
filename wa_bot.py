@@ -32,7 +32,7 @@ class WAInterface(threading.Thread):
         self.signalsInterface.registerListener("ping", self.onPing)
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt):
         try:
-            print "simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent)
+            logger.info("simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent))
             message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
             self.msg_handler(message)
@@ -41,7 +41,7 @@ class WAInterface(threading.Thread):
                 self.wait_connected()
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except Exception,e:
-            print "Error while handling message: %s" %e
+            logger.info("Error while handling message: %s" %e)
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt):
         try:
             message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
@@ -52,23 +52,23 @@ class WAInterface(threading.Thread):
                 self.wait_connected()
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except Exception,e:
-            print "Error while handling message: %s" %e
+            logger.info("Error while handling message: %s" %e)
 
     def run(self):
         try:
-            print "WA: connecting as %s" %self.username
+            logger.info("Connecting as %s" %self.username)
             self.must_run = True
             self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
             self.wait_connected()
-            print "WA: connected as %s" %self.username
+            logger.info("Connected as %s" %self.username)
             while self.must_run:
                 if not self.connected:
                     self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
                 time.sleep(0.5)
                 #raw_input()
         except Exception, e:
-            print "Error in WA loop: %s" %e
-        print "WA: disconnected"
+            logger.info("Error in main loop: %s" %e)
+        logger.info("Main loop closing")
         self.connected = False
         self.stopped_handler()
         self.must_run = False
@@ -77,28 +77,28 @@ class WAInterface(threading.Thread):
     def send(self, target, text):
         self.wait_connected()
         self.methodsInterface.call("message_send", (target, text))
-        print " >>> Sent WA message: %s: %s" %(target, text)
+        logger.info(" >>> Sent WA message: %s: %s" %(target, text))
     def onAuthSuccess(self, username):
-        print "Authed %s" % username
+        logger.info("Authed %s" % username)
         self.connected = True
         self.methodsInterface.call("ready")
     def onAuthFailed(self, username, err):
-        print "Auth Failed!"
+        logger.info("Auth Failed!")
     def onDisconnected(self, reason):
-        print "Disconnected because %s" %reason
+        logger.info("Disconnected because %s" %reason)
         self.connected = False
     def onMessageSent(self, jid, messageId):
-        print "Message successfully sent to %s" % jid
+        logger.info("Message successfully sent to %s" % jid)
     def onMessageDelivered(self, jid, messageId):
-        print "Message successfully delivered to %s" %jid
+        logger.info("Message successfully delivered to %s" %jid)
         self.wait_connected()
         self.methodsInterface.call("delivered_ack", (jid, messageId))
     def onPing(self, pingId):
-        print "ponging to %s" %pingId
+        logger.info("Pong! (%s)" %pingId)
         self.wait_connected()
         self.methodsInterface.call("pong", (pingId,))
     def wait_connected(self):
         while not self.connected:
             if not self.must_run:
-                raise Exception("WA: bot does not intend to connect")
+                raise Exception("bot does not intend to connect")
             time.sleep(0.1)

@@ -1,6 +1,7 @@
 # Copyright 2012 Bruno Gonzalez
 # This software is released under the GNU AFFERO GENERAL PUBLIC LICENSE (see agpl-3.0.txt or www.gnu.org/licenses/agpl-3.0.html)
 import time
+import datetime
 
 class Timestamp():
     def __init__(self, ms_str = None, ms_int = None):
@@ -10,6 +11,10 @@ class Timestamp():
             self.time = ms_int / 1000. / 1000.
         else:
             self.time = time.time()  #long
+    def to_human_str(self):
+        timestamp = self.time
+        dtime = datetime.datetime.fromtimestamp(timestamp)
+        return dtime.strftime("%Y-%m-%d %H:%M:%S.%f")
     def __str__(self):
         return str(self.ms_int())
     def ms_int(self):
