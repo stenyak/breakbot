@@ -30,12 +30,6 @@ class WAInterface(threading.Thread):
         self.signalsInterface.registerListener("receipt_messageSent", self.onMessageSent)
         self.signalsInterface.registerListener("receipt_messageDelivered", self.onMessageDelivered)
         self.signalsInterface.registerListener("ping", self.onPing)
-
-    def wait_connected(self):
-        while not self.connected:
-            if not self.must_run:
-                raise Exception("Interrupting because it must not run")
-            time.sleep(0.1)
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt):
         try:
             print "simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent)
@@ -77,6 +71,7 @@ class WAInterface(threading.Thread):
         print "WA: disconnected"
         self.connected = False
         self.stopped_handler()
+        self.must_run = False
     def stop(self):
         self.must_run = False
     def send(self, target, text):
@@ -102,6 +97,8 @@ class WAInterface(threading.Thread):
         print "ponging to %s" %pingId
         self.wait_connected()
         self.methodsInterface.call("pong", (pingId,))
-
-
-
+    def wait_connected(self):
+        while not self.connected:
+            if not self.must_run:
+                raise Exception("WA: bot does not intend to connect")
+            time.sleep(0.1)

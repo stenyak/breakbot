@@ -36,23 +36,18 @@ class Bot(threading.Thread):
         self.wa_i = WAInterface(self.wa_phone, self.wa_identifier, self.wa_msg_received, self.stop)
     def run(self):
         self.must_run = True
-        self.irc_i.start()
-        self.wa_i.start()
-        while not self.wa_i.connected or not self.irc_i.connected:
-            if not self.must_run:
-                self.irc_i.stop()
-                self.wa_i.stop()
-                return
-            time.sleep(0.5)
-        print "All connected!"
-
-        while self.must_run:
-            time.sleep(0.5)
-
-        self.irc_i.stop()
-        self.wa_i.stop()
+        try:
+            self.irc_i.start()
+            self.irc_i.wait_connected()
+            self.wa_i.start()
+            self.wa_i.wait_connected()
+        except Exception, e:
+            print "Exception while running bot: %s" %e
+            self.stop()
     def stop(self):
         self.must_run = False
+        self.irc_i.stop()
+        self.wa_i.stop()
 
     def irc_msg_received(self, message):
         def get_group_from_chan(contacts, irc_channel):
@@ -79,7 +74,7 @@ class Bot(threading.Thread):
             #private message
             if message.target is None:
                 # directed to bot itself
-                nick = self.contacts[phone]
+                nick = self.contacts[message.get_nick()]
                 msg = "<%s> %s" %(nick, message.msg)
                 self.irc_i.send("#botdebug", message.msg)  #TODO: lookup
             else:
@@ -121,7 +116,11 @@ print "%s" %contacts
 print "Program started"
 b = Bot("34555555125", "", contacts, "irc.freenode.net", 6667)
 try:
-    b.run()
+    b.start()
+    while True:
+        time.sleep(0.5)
 except KeyboardInterrupt:
     print "User wants to stop"
+finally:
+    b.stop()
 print "Program finished"

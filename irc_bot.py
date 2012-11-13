@@ -2,6 +2,7 @@
 # Copyright 2012 Bruno Gonzalez
 # This software is released under the GNU AFFERO GENERAL PUBLIC LICENSE (see agpl-3.0.txt or www.gnu.org/licenses/agpl-3.0.html)
 import threading
+import time
 
 import traceback
 from oyoyo.client import IRCClient
@@ -38,7 +39,6 @@ class IRCInterface(threading.Thread):
         self.cli = IRCClient(Handler, host=self.host, port=self.port, nick=self.nick, connect_cb=self.connect_callback)
         self.cli.command_handler.set_irc_interface(self)
     def connect_callback(self, cli):
-        print "Connected to IRC"
         self.server_connected = True
     def pending_channels(self):
         result = True
@@ -87,6 +87,7 @@ class IRCInterface(threading.Thread):
             print "IRC: %s disconnected from %s:%s" %(self.nick, self.host, self.port)
             self.connected = False
             self.stopped_handler()
+            self.must_run = False
         except:
             print traceback.format_exc()
     def stop(self):
@@ -95,3 +96,8 @@ class IRCInterface(threading.Thread):
         print " >>> Sending IRC message: %s: %s" %(channel, text)
         msg = "PRIVMSG %s :%s" %(channel, text)
         self.cli.send(msg)
+    def wait_connected(self):
+        while not self.connected:
+            if not self.must_run:
+                raise Exception("IRC: bot does not intend to connect")
+            time.sleep(0.1)
