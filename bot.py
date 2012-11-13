@@ -75,15 +75,35 @@ class Bot(threading.Thread):
     def wa_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
         print " <<< Received WA message: %s" %message
-        try:
-            msg = "<%s> %s" %(self.contacts[message.get_nick()], message.msg)
-        except Exception,e:
-            print "Contact not recognized: %s" %e
-            msg = "<%s> %s" %(message.get_nick(), message.msg)
-        try:
-            self.irc_i.send(self.contacts[message.chan], msg)
-        except Exception,e:
-            print "Channel %s not recognized: %s" %(message.chan, e)
+        if message.chan == self.wa_phone:
+            #private message
+            if message.target is None:
+                # directed to bot itself
+                nick = self.contacts[phone]
+                msg = "<%s> %s" %(nick, message.msg)
+                self.irc_i.send("#botdebug", message.msg)  #TODO: lookup
+            else:
+                # directed to someone
+                try:
+                    phone = message.get_nick()
+                    nick = self.contacts[phone]
+                    target = message.target # get IRC nick from contacts
+                                            # if not already a nick
+                    msg = "<%s> %s" %(target, message.msg)
+                    self.irc_i.send("#botdebug", msg)
+                except Exception,e:
+                    print "Couldn't relay directed WA msg to IRC: %s" %(e)
+        else:
+            #group message
+            try:
+                msg = "<%s> %s" %(self.contacts[message.get_nick()], message.msg)
+            except Exception,e:
+                print "Contact not recognized: %s" %e
+                msg = "<%s> %s" %(message.get_nick(), message.msg)
+            try:
+                self.irc_i.send(self.contacts[message.chan], msg)
+            except Exception,e:
+                print "Channel %s not recognized: %s" %(message.chan, e)
 
 
 contacts = {
