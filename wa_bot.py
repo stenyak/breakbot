@@ -8,12 +8,14 @@ from timestamp import Timestamp
 from Yowsup.Tools.utilities import Utilities
 from Yowsup.connectionmanager import YowsupConnectionManager
 import time
+from log import Log
+logger = Log("WA")
 
 class WAInterface(threading.Thread):
     def __init__(self, username, identity, msg_handler, stopped_handler):
         threading.Thread.__init__(self)
         self.connected = False
-        self.must_run = False
+        self.must_run = True
         self.msg_handler = msg_handler
         self.stopped_handler = stopped_handler
         self.username = username

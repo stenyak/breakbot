@@ -26,7 +26,7 @@ def channels_from_contacts(contacts):
 class Bot(threading.Thread):
     def __init__(self, wa_phone, wa_identifier, contacts, irc_server, irc_port):
         threading.Thread.__init__(self)
-        self.must_run = False
+        self.must_run = True
         self.irc_server = irc_server
         self.irc_port = irc_port
         self.wa_phone = wa_phone
@@ -125,7 +125,7 @@ logger.info("Program started")
 b = Bot("34555555125", "", contacts, "irc.freenode.net", 6667)
 try:
     b.start()
-    while True:
+    while b.must_run:
         time.sleep(0.5)
 except KeyboardInterrupt:
     logger.info("User wants to stop")

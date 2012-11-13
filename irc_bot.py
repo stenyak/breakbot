@@ -27,7 +27,7 @@ class Handler(DefaultCommandHandler):
 class IRCInterface(threading.Thread):
     def __init__(self, server, port, nick, channels, msg_handler, stopped_handler):
         threading.Thread.__init__(self)
-        self.must_run = False
+        self.must_run = True
         self.connected = False
         self.msg_handler = msg_handler
         self.stopped_handler = stopped_handler
