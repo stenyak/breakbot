@@ -109,12 +109,17 @@ class Bot(threading.Thread):
 
 
 import json
-with open("contacts.json", "r") as f:
-    contacts = json.loads(f.read())
+with open("config.json", "r") as f:
+    config = json.loads(f.read())
+contacts = config["contacts"]
+cfg = config["config"]
+
 logger.info("Contact list: %s" %contacts)
+with open("config.json.bak", "w") as f:
+    json.dump(contacts, f, indent=4)
 
 logger.info("Program started")
-b = Bot("34555555125", "", contacts, "irc.freenode.net", 6667)
+b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]))
 try:
     b.start()
     while b.must_run:
