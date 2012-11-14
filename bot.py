@@ -92,7 +92,6 @@ class Bot(threading.Thread):
                     nick = self.contacts[phone]
                     target = self.get_group_from_chan(self.contacts, message.target)
                     msg = "<%s> %s" %(target, message.msg)
-                    self.irc_i.send("#botdebug", msg)
                     self.irc_i.send(target, msg)  #TODO: lookup human IRC nick
                 except Exception,e:
                     logger.info("Couldn't relay directed WA msg to IRC: %s" %(e))
