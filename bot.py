@@ -108,16 +108,9 @@ class Bot(threading.Thread):
                 logger.info("Channel %s not recognized: %s" %(message.chan, e))
 
 
-contacts = {
-    "34555555125": "my_bot"
-   ,"34555555373": "person1"
-   ,"34555555530": "person2"
-   ,"34555555806": "person3"
-   ,"34555555565": "person4"
-   ,"34555555602": "person5"
-   ,"34555555373-1352752705@g.us": "#sample_room"
-   ,"34555555530-1321985629@g.us": "#sample_room2"
-}
+import json
+with open("contacts.json", "r") as f:
+    contacts = json.loads(f.read())
 logger.info("Contact list: %s" %contacts)
 
 logger.info("Program started")
