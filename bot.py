@@ -116,7 +116,7 @@ cfg = config["config"]
 
 logger.info("Contact list: %s" %contacts)
 with open("config.json.bak", "w") as f:
-    json.dump(contacts, f, indent=4)
+    json.dump(config, f, indent=4)
 
 logger.info("Program started")
 b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]))
