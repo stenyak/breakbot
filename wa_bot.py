@@ -32,7 +32,7 @@ class WAInterface(threading.Thread):
         self.signalsInterface.registerListener("receipt_messageSent", self.onMessageSent)
         self.signalsInterface.registerListener("receipt_messageDelivered", self.onMessageDelivered)
         self.signalsInterface.registerListener("ping", self.onPing)
-    def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt):
+    def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt, pushName):
         try:
             logger.info("simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent))
             message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
@@ -44,7 +44,7 @@ class WAInterface(threading.Thread):
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except Exception,e:
             logger.info("Error while handling message: %s" %e)
-    def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt):
+    def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt, pushName):
         try:
             message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
