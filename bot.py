@@ -6,7 +6,7 @@ import threading
 import time
 from irc_bot import IRCInterface
 from wa_bot import WAInterface
-from log import info
+from log import info, error
 
 def store_msg(message, file_path=None):
     if file_path is None:
@@ -47,8 +47,8 @@ class Bot(threading.Thread):
             info("Waiting for WA")
             self.wa_i.wait_connected()
             info("Main loop pretty much finished")
-        except Exception, e:
-            info("Exception while running bot: %s" %e)
+        except:
+            error("Problem while running bot")
             self.stop()
     def stop(self):
         info("Stop instructed, about to stop main loop")
@@ -70,8 +70,8 @@ class Bot(threading.Thread):
         try:
             group = self.get_group_from_chan(self.contacts, message.chan)
             self.wa_i.send(group, msg)
-        except Exception,e:
-            info("Channel %s not recognized: %s" %(message.chan, e))
+        except:
+            info("Cannot send message to channel %s" %message.chan)
 
 
     def wa_msg_received(self, message):
@@ -92,20 +92,19 @@ class Bot(threading.Thread):
                     target = self.get_group_from_chan(self.contacts, message.target)
                     msg = "<%s> %s" %(target, message.msg)
                     self.irc_i.send(target, msg)  #TODO: lookup human IRC nick
-                except Exception,e:
-                    info("Couldn't relay directed WA msg to IRC: %s" %(e))
+                except:
+                    error("Couldn't relay directed WA msg to IRC")
         else:
             #group message
             try:
                 msg = "<%s> %s" %(self.contacts[message.get_nick()], message.msg)
-            except Exception,e:
-                info("Contact not recognized: %s" %e)
+            except:
+                error("Contact not recognized")
                 msg = "<%s> %s" %(message.get_nick(), message.msg)
             try:
                 self.irc_i.send(self.contacts[message.chan], msg)
-            except Exception,e:
-                info("Channel %s not recognized: %s" %(message.chan, e))
-
+            except:
+                error("Channel %s not recognized: %s" %(message.chan))
 
 import json
 with open("config.json", "r") as f:
@@ -124,7 +123,7 @@ try:
     while b.must_run:
         time.sleep(0.5)
 except KeyboardInterrupt:
-    info("User wants to stop")
+    error("User wants to stop")
 finally:
     b.stop()
 info("Program finished")

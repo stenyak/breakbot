@@ -8,7 +8,7 @@ from timestamp import Timestamp
 from Yowsup.Tools.utilities import Utilities
 from Yowsup.connectionmanager import YowsupConnectionManager
 import time
-from log import info
+from log import info, error
 
 class WAInterface(threading.Thread):
     def __init__(self, username, identity, msg_handler, stopped_handler):
@@ -41,8 +41,8 @@ class WAInterface(threading.Thread):
             if wantsReceipt and sendReceipts:
                 self.wait_connected()
                 self.methodsInterface.call("message_ack", (jid, messageId))
-        except Exception,e:
-            info("Error while handling message: %s" %e)
+        except:
+            error("Error while handling message")
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt, pushName):
         try:
             message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
@@ -52,8 +52,8 @@ class WAInterface(threading.Thread):
             if wantsReceipt and sendReceipts:
                 self.wait_connected()
                 self.methodsInterface.call("message_ack", (jid, messageId))
-        except Exception,e:
-            info("Error while handling message: %s" %e)
+        except:
+            error("Error while handling message")
 
     def run(self):
         try:
@@ -67,8 +67,8 @@ class WAInterface(threading.Thread):
                     self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
                 time.sleep(0.5)
                 #raw_input()
-        except Exception, e:
-            info("Error in main loop: %s" %e)
+        except:
+            error("Main loop stopping")
         info("Main loop closing")
         self.connected = False
         self.stopped_handler()

@@ -3,9 +3,8 @@
 # This software is released under the GNU AFFERO GENERAL PUBLIC LICENSE (see agpl-3.0.txt or www.gnu.org/licenses/agpl-3.0.html)
 import threading
 import time
-from log import info
+from log import info, error
 
-import traceback
 from oyoyo.client import IRCClient
 from oyoyo.cmdhandler import DefaultCommandHandler
 from message import Message
@@ -90,7 +89,7 @@ class IRCInterface(threading.Thread):
             self.stopped_handler()
             self.must_run = False
         except:
-            info("Error in main loop: %s" %traceback.format_exc())
+            error("Error in main loop")
     def stop(self):
         self.must_run = False
     def send(self, channel, text):
