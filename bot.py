@@ -6,8 +6,7 @@ import threading
 import time
 from irc_bot import IRCInterface
 from wa_bot import WAInterface
-from log import Log
-logger = Log("Gateway")
+from log import info
 
 def store_msg(message, file_path=None):
     if file_path is None:
@@ -39,20 +38,20 @@ class Bot(threading.Thread):
     def run(self):
         self.must_run = True
         try:
-            logger.info("Starting IRC")
+            info("Starting IRC")
             self.irc_i.start()
-            logger.info("Waiting for IRC")
+            info("Waiting for IRC")
             self.irc_i.wait_connected()
-            logger.info("Starting WA")
+            info("Starting WA")
             self.wa_i.start()
-            logger.info("Waiting for WA")
+            info("Waiting for WA")
             self.wa_i.wait_connected()
-            logger.info("Main loop pretty much finished")
+            info("Main loop pretty much finished")
         except Exception, e:
-            logger.info("Exception while running bot: %s" %e)
+            info("Exception while running bot: %s" %e)
             self.stop()
     def stop(self):
-        logger.info("Stop instructed, about to stop main loop")
+        info("Stop instructed, about to stop main loop")
         self.must_run = False
         self.irc_i.stop()
         self.wa_i.stop()
@@ -65,19 +64,19 @@ class Bot(threading.Thread):
 
     def irc_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
-        logger.info(" <<< Received IRC message: %s" %message)
+        info(" <<< Received IRC message: %s" %message)
 
         msg = "<%s> %s" %(message.get_nick(), message.msg)
         try:
             group = self.get_group_from_chan(self.contacts, message.chan)
             self.wa_i.send(group, msg)
         except Exception,e:
-            logger.info("Channel %s not recognized: %s" %(message.chan, e))
+            info("Channel %s not recognized: %s" %(message.chan, e))
 
 
     def wa_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
-        logger.info(" <<< Received WA message: %s" %message)
+        info(" <<< Received WA message: %s" %message)
         if message.chan == self.wa_phone:
             #private message
             if message.target is None:
@@ -94,18 +93,18 @@ class Bot(threading.Thread):
                     msg = "<%s> %s" %(target, message.msg)
                     self.irc_i.send(target, msg)  #TODO: lookup human IRC nick
                 except Exception,e:
-                    logger.info("Couldn't relay directed WA msg to IRC: %s" %(e))
+                    info("Couldn't relay directed WA msg to IRC: %s" %(e))
         else:
             #group message
             try:
                 msg = "<%s> %s" %(self.contacts[message.get_nick()], message.msg)
             except Exception,e:
-                logger.info("Contact not recognized: %s" %e)
+                info("Contact not recognized: %s" %e)
                 msg = "<%s> %s" %(message.get_nick(), message.msg)
             try:
                 self.irc_i.send(self.contacts[message.chan], msg)
             except Exception,e:
-                logger.info("Channel %s not recognized: %s" %(message.chan, e))
+                info("Channel %s not recognized: %s" %(message.chan, e))
 
 
 import json
@@ -114,18 +113,18 @@ with open("config.json", "r") as f:
 contacts = config["contacts"]
 cfg = config["config"]
 
-logger.info("Contact list: %s" %contacts)
+info("Contact list: %s" %contacts)
 with open("config.json.bak", "w") as f:
     json.dump(config, f, indent=4)
 
-logger.info("Program started")
+info("Program started")
 b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]))
 try:
     b.start()
     while b.must_run:
         time.sleep(0.5)
 except KeyboardInterrupt:
-    logger.info("User wants to stop")
+    info("User wants to stop")
 finally:
     b.stop()
-logger.info("Program finished")
+info("Program finished")

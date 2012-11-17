@@ -8,8 +8,7 @@ from timestamp import Timestamp
 from Yowsup.Tools.utilities import Utilities
 from Yowsup.connectionmanager import YowsupConnectionManager
 import time
-from log import Log
-logger = Log("WA")
+from log import info
 
 class WAInterface(threading.Thread):
     def __init__(self, username, identity, msg_handler, stopped_handler):
@@ -34,7 +33,7 @@ class WAInterface(threading.Thread):
         self.signalsInterface.registerListener("ping", self.onPing)
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt, pushName):
         try:
-            logger.info("simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent))
+            info("simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent))
             message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
             self.msg_handler(message)
@@ -43,7 +42,7 @@ class WAInterface(threading.Thread):
                 self.wait_connected()
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except Exception,e:
-            logger.info("Error while handling message: %s" %e)
+            info("Error while handling message: %s" %e)
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt, pushName):
         try:
             message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
@@ -54,23 +53,23 @@ class WAInterface(threading.Thread):
                 self.wait_connected()
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except Exception,e:
-            logger.info("Error while handling message: %s" %e)
+            info("Error while handling message: %s" %e)
 
     def run(self):
         try:
-            logger.info("Connecting as %s" %self.username)
+            info("Connecting as %s" %self.username)
             self.must_run = True
             self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
             self.wait_connected()
-            logger.info("Connected as %s" %self.username)
+            info("Connected as %s" %self.username)
             while self.must_run:
                 if not self.connected:
                     self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
                 time.sleep(0.5)
                 #raw_input()
         except Exception, e:
-            logger.info("Error in main loop: %s" %e)
-        logger.info("Main loop closing")
+            info("Error in main loop: %s" %e)
+        info("Main loop closing")
         self.connected = False
         self.stopped_handler()
         self.must_run = False
@@ -79,24 +78,24 @@ class WAInterface(threading.Thread):
     def send(self, target, text):
         self.wait_connected()
         self.methodsInterface.call("message_send", (target, text))
-        logger.info(" >>> Sent WA message: %s: %s" %(target, text))
+        info(" >>> Sent WA message: %s: %s" %(target, text))
     def onAuthSuccess(self, username):
-        logger.info("Authed %s" % username)
+        info("Authed %s" % username)
         self.connected = True
         self.methodsInterface.call("ready")
     def onAuthFailed(self, username, err):
-        logger.info("Auth Failed!")
+        info("Auth Failed!")
     def onDisconnected(self, reason):
-        logger.info("Disconnected because %s" %reason)
+        info("Disconnected because %s" %reason)
         self.connected = False
     def onMessageSent(self, jid, messageId):
-        logger.info("Message successfully sent to %s" % jid)
+        info("Message successfully sent to %s" % jid)
     def onMessageDelivered(self, jid, messageId):
-        logger.info("Message successfully delivered to %s" %jid)
+        info("Message successfully delivered to %s" %jid)
         self.wait_connected()
         self.methodsInterface.call("delivered_ack", (jid, messageId))
     def onPing(self, pingId):
-        logger.info("Pong! (%s)" %pingId)
+        info("Pong! (%s)" %pingId)
         self.wait_connected()
         self.methodsInterface.call("pong", (pingId,))
     def wait_connected(self):
