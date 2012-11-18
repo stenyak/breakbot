@@ -24,6 +24,7 @@ class WAInterface(threading.Thread):
         self.signalsInterface = self.cm.getSignalsInterface()
         self.methodsInterface = self.cm.getMethodsInterface()
         self.signalsInterface.registerListener("group_imageReceived", self.onGroup_ImageReceived)
+        self.signalsInterface.registerListener("image_received", self.onImageReceived)
         self.signalsInterface.registerListener("message_received", self.onMessageReceived)
         self.signalsInterface.registerListener("group_messageReceived", self.onGroup_MessageReceived)
         self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
@@ -44,6 +45,18 @@ class WAInterface(threading.Thread):
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except:
             error("Error while handling message")
+    def onImageReceived(self, messageId, jid, preview, url, size, receiptRequested):
+        try:
+            messageContent = unicode("[ image: %s ]"%url, "utf-8")
+            message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
+            self.msg_handler(message)
+            sendReceipts = True
+            if receiptRequested and sendReceipts:
+                self.wait_connected()
+                self.methodsInterface.call("message_ack", (jid, messageId))
+        except:
+            error("Error while handling image")
+
     def onGroup_ImageReceived(self, messageId, jid, author, preview, url, size, receiptRequested):
         try:
             messageContent = unicode("[ image: %s ]"%url, "utf-8")
