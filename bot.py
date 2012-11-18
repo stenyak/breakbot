@@ -104,7 +104,7 @@ class Bot(threading.Thread):
             try:
                 self.irc_i.send(self.contacts[message.chan], msg)
             except:
-                error("Channel %s not recognized: %s" %(message.chan))
+                error("Channel %s not recognized" %(message.chan))
 
 import json
 with open("config.json", "r") as f:
