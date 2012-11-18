@@ -20,13 +20,8 @@ def log(text, timestamp = None):
 def info(text):
     log(text)
 def error(text):
-    t, v, tb = sys.exc_info()
-    if t is None:
-        log(text)
-    else:
-        time = Timestamp()
-        log("%s (%s):" %(text, t.__name__), time)
-        lines = traceback.format_exception(t, v, tb)
-        lines = [": ".join(line.split("\n")) for line in traceback.format_exception(t, v, tb)]
-        for line in lines[1:-1]:
-            log(">%s" %line, time)
+    time = Timestamp()
+    t, _, _ = sys.exc_info()
+    if t is not None:
+        log("\n%s" %traceback.format_exc(), time)
+    log(text, time)
