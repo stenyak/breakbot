@@ -33,7 +33,7 @@ class WAInterface(threading.Thread):
         self.signalsInterface.registerListener("ping", self.onPing)
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt, pushName):
         try:
-            info("simple messageId %s, jid %s, content %s" %(messageId, jid, messageContent))
+            messageContent = unicode(messageContent, "utf-8")
             message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
             self.msg_handler(message)
@@ -45,6 +45,7 @@ class WAInterface(threading.Thread):
             error("Error while handling message")
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt, pushName):
         try:
+            messageContent = unicode(messageContent, "utf-8")
             message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
             message.time = Timestamp(ms_int = timestamp*1000)
             self.msg_handler(message)
@@ -77,8 +78,8 @@ class WAInterface(threading.Thread):
         self.must_run = False
     def send(self, target, text):
         self.wait_connected()
-        self.methodsInterface.call("message_send", (target, text))
-        info(" >>> Sent WA message: %s: %s" %(target, text))
+        self.methodsInterface.call("message_send", (target, text.encode("utf-8")))
+        info((" >>> Sent WA message: %s: %s" %(target, text)).encode("utf-8"))
     def onAuthSuccess(self, username):
         info("Authed %s" % username)
         self.connected = True

@@ -12,6 +12,7 @@ from message import Message
 class Handler(DefaultCommandHandler):
     # Handle messages (the PRIVMSG command, note lower case)
     def privmsg(self, nick_full, chan, msg):
+        msg = unicode(msg, "utf-8")
         m = Message("irc", nick_full, chan, msg)
         try:
             self.irc_interface.msg_handler(m)
@@ -93,7 +94,7 @@ class IRCInterface(threading.Thread):
     def stop(self):
         self.must_run = False
     def send(self, channel, text):
-        info(" >>> Sending IRC message: %s: %s" %(channel, text))
+        info((" >>> Sending IRC message: %s: %s" %(channel, text)).encode("utf-8"))
         msg = "PRIVMSG %s :%s" %(channel, text)
         self.cli.send(msg)
     def wait_connected(self):

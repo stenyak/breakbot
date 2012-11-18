@@ -13,7 +13,7 @@ def store_msg(message, file_path=None):
         raise Exception("No file specified!")
     text = message.serialize() + "\n"
     with open(file_path, "a") as log:
-        log.write(text)
+        log.write(text.encode("utf-8"))
 def channels_from_contacts(contacts):
     channels = []
     for k,v in contacts.items():
