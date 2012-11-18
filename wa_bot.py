@@ -23,6 +23,7 @@ class WAInterface(threading.Thread):
         self.cm.setAutoPong(True)
         self.signalsInterface = self.cm.getSignalsInterface()
         self.methodsInterface = self.cm.getMethodsInterface()
+        self.signalsInterface.registerListener("group_imageReceived", self.onGroup_ImageReceived)
         self.signalsInterface.registerListener("message_received", self.onMessageReceived)
         self.signalsInterface.registerListener("group_messageReceived", self.onGroup_MessageReceived)
         self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
@@ -43,6 +44,18 @@ class WAInterface(threading.Thread):
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except:
             error("Error while handling message")
+    def onGroup_ImageReceived(self, messageId, jid, author, preview, url, size, receiptRequested):
+        try:
+            messageContent = unicode("[ image: %s ]"%url, "utf-8")
+            message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
+            self.msg_handler(message)
+            sendReceipts = True
+            if receiptRequested and sendReceipts:
+                self.wait_connected()
+                self.methodsInterface.call("message_ack", (jid, messageId))
+        except:
+            error("Error while handling group message")
+        
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt, pushName):
         try:
             messageContent = unicode(messageContent, "utf-8")
