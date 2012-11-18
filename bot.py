@@ -11,9 +11,13 @@ from log import info, error
 def store_msg(message, file_path=None):
     if file_path is None:
         raise Exception("No file specified!")
-    text = message.serialize() + "\n"
-    with open(file_path, "a") as log:
-        log.write(text.encode("utf-8"))
+    try:
+        text = message.serialize() + "\n"
+        with open(file_path, "a") as log:
+            log.write(text.encode("utf-8"))
+    except:
+        error("Couldn't write message to log")
+
 def channels_from_contacts(contacts):
     channels = []
     for k,v in contacts.items():
