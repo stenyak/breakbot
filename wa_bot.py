@@ -67,7 +67,7 @@ class WAInterface(threading.Thread):
                 self.wait_connected()
                 self.methodsInterface.call("message_ack", (jid, messageId))
         except:
-            error("Error while handling group message")
+            error("Error while handling group image")
         
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt, pushName):
         try:
