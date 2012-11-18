@@ -12,11 +12,12 @@ It currently supports:
 
  * WhatsApp group chats <-> IRC rooms gatewaying.
  * WhatsApp phone numbers <-> IRC nick conversion.
+ * WhastApp image attachments.
 
 Things it does **not** currently support:
 
  * Private messaging (partially implemented)
- * File attachments, topic changes, etc.
+ * DCC send, topic changes, etc.
  * Other protocols such as XMPP or ICQ.
 
 ### Contributing
