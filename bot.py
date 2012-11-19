@@ -28,13 +28,14 @@ def channels_from_contacts(contacts):
     return channels
     
 class Bot(threading.Thread):
-    def __init__(self, wa_phone, wa_identifier, contacts, irc_server, irc_port, owner_nick):
+    def __init__(self, wa_phone, wa_identifier, contacts, irc_server, irc_port, owner_nick, log_file):
         threading.Thread.__init__(self)
         self.must_run = True
         self.irc_server = irc_server
         self.irc_port = irc_port
         self.owner_nick = owner_nick
         self.wa_phone = wa_phone
+        self.log_file = log_file
         irc_nick = contacts[wa_phone]
         self.irc_nick = irc_nick
         self.wa_identifier = wa_identifier
@@ -71,7 +72,7 @@ class Bot(threading.Thread):
 
     @catch_them_all
     def irc_msg_received(self, message):
-        store_msg(message, "/tmp/log.txt")
+        store_msg(message, self.log_file)
         info(" <<< Received IRC message: %s" %message)
 
         if message.chan == self.irc_nick:
@@ -96,7 +97,7 @@ class Bot(threading.Thread):
 
     @catch_them_all
     def wa_msg_received(self, message):
-        store_msg(message, "/tmp/log.txt")
+        store_msg(message, self.log_file)
         info(" <<< Received WA message: %s" %message)
         if message.chan == self.wa_phone:
             #private message
@@ -139,7 +140,7 @@ with open("config.json.bak", "w") as f:
     json.dump(config, f, indent=4)
 
 info("Program started")
-b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]), cfg["bot_owner_nick"])
+b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]), cfg["bot_owner_nick"], cfg["log_file"])
 try:
     b.start()
     while b.must_run:

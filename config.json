@@ -15,6 +15,7 @@
         "irc_nick": "my_bot",
         "irc_server_name": "irc.freenode.net",
         "irc_server_port": "6667",
-        "bot_owner_nick": "person1"
+        "bot_owner_nick": "person1",
+        "log_file": "/tmp/log.txt"
     }
 }
