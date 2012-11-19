@@ -19,8 +19,9 @@ class Message():
             try:
                 split = msg.split(":", 1)
                 if len(split) == 2:
-                    self.target = split[0]
-                    msg = split[1].lstrip()
+                    if not split[0].endswith(("http","https","image")):
+                        self.target = split[0]
+                        msg = split[1].lstrip()
             except IndexError:
                 pass
         else:
