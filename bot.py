@@ -24,7 +24,6 @@ def channels_from_contacts(contacts):
     for k,v in contacts.items():
         if v.startswith("#"):
             channels.append(v)
-    channels.append("#botdebug")
     return channels
     
 class Bot(threading.Thread):
