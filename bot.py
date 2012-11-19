@@ -28,11 +28,12 @@ def channels_from_contacts(contacts):
     return channels
     
 class Bot(threading.Thread):
-    def __init__(self, wa_phone, wa_identifier, contacts, irc_server, irc_port):
+    def __init__(self, wa_phone, wa_identifier, contacts, irc_server, irc_port, owner_nick):
         threading.Thread.__init__(self)
         self.must_run = True
         self.irc_server = irc_server
         self.irc_port = irc_port
+        self.owner_nick = owner_nick
         self.wa_phone = wa_phone
         irc_nick = contacts[wa_phone]
         self.irc_nick = irc_nick
@@ -104,7 +105,7 @@ class Bot(threading.Thread):
                 nick = self.contacts[message.get_nick()]
                 irc_msg = "<%s> %s" %(nick, message.msg)
                 irc_target = self.contacts[message.nick_full.split("@")[0]]
-                self.irc_i.send("person1", irc_msg)  #TODO: lookup human IRC nick
+                self.irc_i.send(self.owner_nick, irc_msg)
             else:
                 # directed to someone
                 try:
@@ -112,7 +113,7 @@ class Bot(threading.Thread):
                     nick = self.contacts[phone]
                     target = self.get_group_from_chan(self.contacts, message.target)
                     msg = "<%s> %s" %(target, message.msg)
-                    self.irc_i.send(target, msg)  #TODO: lookup human IRC nick
+                    self.irc_i.send(target, msg)
                 except:
                     error("Couldn't relay directed WA msg to IRC")
         else:
@@ -138,7 +139,7 @@ with open("config.json.bak", "w") as f:
     json.dump(config, f, indent=4)
 
 info("Program started")
-b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]))
+b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]), cfg["bot_owner_nick"])
 try:
     b.start()
     while b.must_run:
