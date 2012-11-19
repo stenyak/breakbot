@@ -64,7 +64,7 @@ class Bot(threading.Thread):
 
     def get_group_from_chan(self, contacts, irc_channel):
         for k,v in contacts.items():
-            if v == irc_channel:
+            if v.lower() == irc_channel.lower():
                 return k
         raise Exception("Channel not found in contact list")
 
