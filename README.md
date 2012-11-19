@@ -54,6 +54,7 @@ Steps:
  * `wa_id` is the second field described in the `Your Login Credentials` section at [yowsup-cli docs](https://github.com/tgalal/yowsup/wiki/yowsup-cli)
  * `wa_phone` is the phone number used by the bot to connect to WhatsApp. See `Requisites` above.
  * `irc_*` parameters are what you expect.
+ * `bot_owner_nick` is the irc nick of the bot owner (needed for private messaging).
 6. Make sure your bot nick and phone are also in the contact list.
 7. Run `python bot.py` so that it connects to WhatsApp
  * Watch the screen for strings matching `NNN-NNN@g.us`. Those are the WhastApp group chats. Write them down somewhere.
