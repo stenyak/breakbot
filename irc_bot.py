@@ -4,6 +4,7 @@
 import threading
 import time
 from log import info, error
+from catch_them_all import catch_them_all
 
 from oyoyo.client import IRCClient
 from oyoyo.cmdhandler import DefaultCommandHandler
@@ -11,15 +12,14 @@ from message import Message
 
 class Handler(DefaultCommandHandler):
     # Handle messages (the PRIVMSG command, note lower case)
+    @catch_them_all
     def privmsg(self, nick_full, chan, msg):
         msg = unicode(msg, "utf-8")
         m = Message("irc", nick_full, chan, msg)
-        try:
-            self.irc_interface.msg_handler(m)
-        except:
-            pass
+        self.irc_interface.msg_handler(m)
     def set_irc_interface(self, irc_interface):
         self.irc_interface = irc_interface
+    @catch_them_all
     def join(self, nick_full, channel):
         self.irc_interface.joined(channel)
 
@@ -39,6 +39,7 @@ class IRCInterface(threading.Thread):
             self.channels_joined[c] = False
         self.cli = IRCClient(Handler, host=self.host, port=self.port, nick=self.nick, connect_cb=self.connect_callback)
         self.cli.command_handler.set_irc_interface(self)
+    @catch_them_all
     def connect_callback(self, cli):
         self.server_connected = True
     def pending_channels(self):
@@ -69,28 +70,25 @@ class IRCInterface(threading.Thread):
                 if not self.must_run:
                     raise Exception("Must stop")
                 conn.next()
-
+    @catch_them_all
     def run(self):
-        try:
-            self.must_run = True
-            info("%s connecting to %s:%s" %(self.nick, self.host, self.port))
-            conn = self.connect()
-            self.join_channels(conn)
-            while not self.pending_channels():
-                if not self.must_run:
-                    raise Exception("Must stop")
-                conn.next()
-            self.connected = True
-            info("%s connected to %s:%s" %(self.nick, self.host, self.port))
-            while self.must_run:
-                conn.next()
-            self.cli.send("QUIT :a la mieeerrrrda")
-            info("%s disconnected from %s:%s" %(self.nick, self.host, self.port))
-            self.connected = False
-            self.stopped_handler()
-            self.must_run = False
-        except:
-            error("Error in main loop")
+        self.must_run = True
+        info("%s connecting to %s:%s" %(self.nick, self.host, self.port))
+        conn = self.connect()
+        self.join_channels(conn)
+        while not self.pending_channels():
+            if not self.must_run:
+                raise Exception("Must stop")
+            conn.next()
+        self.connected = True
+        info("%s connected to %s:%s" %(self.nick, self.host, self.port))
+        while self.must_run:
+            conn.next()
+        self.cli.send("QUIT :a la mieeerrrrda")
+        info("%s disconnected from %s:%s" %(self.nick, self.host, self.port))
+        self.connected = False
+        self.stopped_handler()
+        self.must_run = False
     def stop(self):
         self.must_run = False
     def send(self, channel, text):

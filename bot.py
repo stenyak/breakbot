@@ -7,6 +7,7 @@ import time
 from irc_bot import IRCInterface
 from wa_bot import WAInterface
 from log import info, error
+from catch_them_all import catch_them_all
 
 def store_msg(message, file_path=None):
     if file_path is None:
@@ -39,9 +40,10 @@ class Bot(threading.Thread):
         self.contacts = contacts
         self.irc_i = IRCInterface(self.irc_server, self.irc_port, self.irc_nick, channels_from_contacts(self.contacts), self.irc_msg_received, self.stop)
         self.wa_i = WAInterface(self.wa_phone, self.wa_identifier, self.wa_msg_received, self.stop)
+    @catch_them_all
     def run(self):
-        self.must_run = True
         try:
+            self.must_run = True
             info("Starting IRC")
             self.irc_i.start()
             info("Waiting for IRC")
@@ -52,7 +54,7 @@ class Bot(threading.Thread):
             self.wa_i.wait_connected()
             info("Main loop pretty much finished")
         except:
-            error("Problem while running bot")
+            info("Main loop closing")
             self.stop()
     def stop(self):
         info("Stop instructed, about to stop main loop")
@@ -66,6 +68,7 @@ class Bot(threading.Thread):
                 return k
         raise Exception("Channel not found in contact list")
 
+    @catch_them_all
     def irc_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
         info(" <<< Received IRC message: %s" %message)
@@ -77,7 +80,7 @@ class Bot(threading.Thread):
         except:
             info("Cannot send message to channel %s" %message.chan)
 
-
+    @catch_them_all
     def wa_msg_received(self, message):
         store_msg(message, "/tmp/log.txt")
         info(" <<< Received WA message: %s" %message)
