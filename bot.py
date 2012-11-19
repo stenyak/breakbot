@@ -73,12 +73,25 @@ class Bot(threading.Thread):
         store_msg(message, "/tmp/log.txt")
         info(" <<< Received IRC message: %s" %message)
 
-        msg = "<%s> %s" %(message.get_nick(), message.msg)
-        try:
-            group = self.get_group_from_chan(self.contacts, message.chan)
-            self.wa_i.send(group, msg)
-        except:
-            info("Cannot send message to channel %s" %message.chan)
+        if message.chan == self.irc_nick:
+            info("Private message")
+            if message.target is None:
+                raise Exception("Private message sent to no one?")
+            try:
+                wa_target = self.contacts[message.target] #try by phone
+            except KeyError:
+                wa_target = self.get_group_from_chan(self.contacts, message.target) #try by nick
+            wa_target += "@s.whatsapp.net"
+            msg = "<%s> %s" %(message.get_nick(), message.msg.split(":", 1)[1])
+            self.wa_i.send(wa_target, msg)
+        else:
+            info("Group message")
+            msg = "<%s> %s" %(message.get_nick(), message.msg)
+            try:
+                group = self.get_group_from_chan(self.contacts, message.chan)
+                self.wa_i.send(group, msg)
+            except:
+                info("Cannot send message to channel %s" %message.chan)
 
     @catch_them_all
     def wa_msg_received(self, message):
@@ -89,8 +102,9 @@ class Bot(threading.Thread):
             if message.target is None:
                 # directed to bot itself
                 nick = self.contacts[message.get_nick()]
-                msg = "<%s> %s" %(nick, message.msg)
-                self.irc_i.send("person1", message.msg)  #TODO: lookup human IRC nick
+                irc_msg = "<%s> %s" %(nick, message.msg)
+                irc_target = self.contacts[message.nick_full.split("@")[0]]
+                self.irc_i.send("person1", irc_msg)  #TODO: lookup human IRC nick
             else:
                 # directed to someone
                 try:
