@@ -4,3 +4,6 @@
 svn checkout http://oyoyo.googlecode.com/svn/trunk/oyoyo/oyoyo -r55
 git clone https://github.com/tgalal/yowsup.git yowsup.git
 ln -s yowsup.git/src/Yowsup .
+cd yowsup.git
+    git checkout c5d656edce0373c97352be283d27f794df40b4c1
+cd ..
