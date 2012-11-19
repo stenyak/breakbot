@@ -13,10 +13,10 @@ It currently supports:
  * WhatsApp group chats <-> IRC rooms gatewaying.
  * WhatsApp phone numbers <-> IRC nick conversion.
  * WhastApp image attachments.
+ * Private messaging
 
 Things it does **not** currently support:
 
- * Private messaging (partially implemented)
  * DCC send, topic changes, etc.
  * Other protocols such as XMPP or ICQ.
 
