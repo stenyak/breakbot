@@ -5,6 +5,7 @@ import threading
 import time
 from log import info, error
 from catch_them_all import catch_them_all
+from Queue import Queue
 
 from oyoyo.client import IRCClient
 from oyoyo.cmdhandler import DefaultCommandHandler
@@ -34,6 +35,7 @@ class IRCInterface(threading.Thread):
         self.host = server
         self.port = port
         self.channels = channels
+        self.send_queue = Queue()
         self.channels_joined = {}
         for c in self.channels:
             self.channels_joined[c] = False
@@ -84,6 +86,11 @@ class IRCInterface(threading.Thread):
         info("%s connected to %s:%s" %(self.nick, self.host, self.port))
         while self.must_run:
             conn.next()
+            if not self.send_queue.empty():
+                text = self.send_queue.get()
+                info((" >>> Sending IRC message: %s" %text).encode("utf-8"))
+                self.cli.send(text)
+                time.sleep(0.5) #throttle message sending in order to avoid excess flood kick
         self.cli.send("QUIT :a la mieeerrrrda")
         info("%s disconnected from %s:%s" %(self.nick, self.host, self.port))
         self.connected = False
@@ -92,9 +99,9 @@ class IRCInterface(threading.Thread):
     def stop(self):
         self.must_run = False
     def send(self, channel, text):
-        info((" >>> Sending IRC message: %s: %s" %(channel, text)).encode("utf-8"))
+        info((" >>> Enqueueing IRC message: %s: %s" %(channel, text)).encode("utf-8"))
         msg = "PRIVMSG %s :%s" %(channel, text)
-        self.cli.send(msg)
+        self.send_queue.put(msg)
     def wait_connected(self):
         while not self.connected:
             if not self.must_run:
