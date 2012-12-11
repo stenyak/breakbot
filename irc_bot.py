@@ -66,8 +66,9 @@ class IRCInterface(threading.Thread):
         return conn
     def join_channels(self, conn):
         for c in self.channels:
-            info("Joining channel %s" %c)
-            self.cli.send("JOIN", c)
+            if not c in self.channels_joined or self.channels_joined[c] == False:
+                info("Joining channel %s" %c)
+                self.cli.send("JOIN", c)
             while self.pending_channels():
                 if not self.must_run:
                     raise Exception("Must stop")
