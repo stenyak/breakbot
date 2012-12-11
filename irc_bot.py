@@ -23,6 +23,12 @@ class Handler(DefaultCommandHandler):
     @catch_them_all
     def join(self, nick_full, channel):
         self.irc_interface.joined(channel)
+    @catch_them_all
+    def part(self, nick_full, channel):
+        self.irc_interface.parted(channel)
+    @catch_them_all
+    def kick(self, kicker, channel, nick, reason):
+        self.irc_interface.parted(channel)
 
 class IRCInterface(threading.Thread):
     def __init__(self, server, port, nick, channels, msg_handler, stopped_handler):
@@ -54,6 +60,11 @@ class IRCInterface(threading.Thread):
     def joined(self, channel):
         self.channels_joined[channel] = True
         info("Joined channel %s" %channel)
+    def parted(self, channel):
+        self.channels_joined[channel] = False
+        info("Left channel %s" %channel)
+        if self.must_run:
+            self.join_channels(self.conn)
     def connect(self):
         info("Connecting to server")
         self.server_connected = False
