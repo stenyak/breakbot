@@ -53,7 +53,7 @@ class Bot(threading.Thread):
             self.wa_i.start()
             info("Waiting for WA")
             self.wa_i.wait_connected()
-            info("Main loop pretty much finished")
+            info("Main loop running")
         except:
             info("Main loop closing")
             self.stop()
