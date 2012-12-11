@@ -76,16 +76,16 @@ class IRCInterface(threading.Thread):
     def run(self):
         self.must_run = True
         info("%s connecting to %s:%s" %(self.nick, self.host, self.port))
-        conn = self.connect()
-        self.join_channels(conn)
+        self.conn = self.connect()
+        self.join_channels(self.conn)
         while not self.pending_channels():
             if not self.must_run:
                 raise Exception("Must stop")
-            conn.next()
+            self.conn.next()
         self.connected = True
         info("%s connected to %s:%s" %(self.nick, self.host, self.port))
         while self.must_run:
-            conn.next()
+            self.conn.next()
             if not self.send_queue.empty():
                 text = self.send_queue.get()
                 info((" >>> Sending IRC message: %s" %text).encode("utf-8"))
@@ -94,6 +94,7 @@ class IRCInterface(threading.Thread):
         self.cli.send("QUIT :a la mieeerrrrda")
         info("%s disconnected from %s:%s" %(self.nick, self.host, self.port))
         self.connected = False
+        del self.conn
         self.stopped_handler()
         self.must_run = False
     def stop(self):
