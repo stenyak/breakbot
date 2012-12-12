@@ -98,6 +98,7 @@ class IRCInterface(threading.Thread):
         info("%s connected to %s:%s" %(self.nick, self.host, self.port))
         while self.must_run:
             self.conn.next()
+            time.sleep(0.1)
             if not self.send_queue.empty():
                 text = self.send_queue.get()
                 info((" >>> Sending IRC message: %s" %text).encode("utf-8"))
