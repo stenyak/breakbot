@@ -68,14 +68,16 @@ class IRCInterface(threading.Thread):
     def connect(self):
         info("Connecting to server")
         self.server_connected = False
-        conn = self.cli.connect()
+        self.conn = self.cli.connect()
         while not self.server_connected:
             if not self.must_run:
                 raise Exception("Must stop")
-            conn.next()
+            self.conn.next()
         info("Connected to server")
-        return conn
-    def join_channels(self, conn):
+    def next(self):
+        try:
+            self.conn.next
+    def join_channels(self):
         for c in self.channels:
             if not c in self.channels_joined or self.channels_joined[c] == False:
                 info("Joining channel %s" %c)
@@ -83,13 +85,13 @@ class IRCInterface(threading.Thread):
             while self.pending_channels():
                 if not self.must_run:
                     raise Exception("Must stop")
-                conn.next()
+                self.conn.next()
     @catch_them_all
     def run(self):
         self.must_run = True
         info("%s connecting to %s:%s" %(self.nick, self.host, self.port))
-        self.conn = self.connect()
-        self.join_channels(self.conn)
+        self.connect()
+        self.join_channels()
         while not self.pending_channels():
             if not self.must_run:
                 raise Exception("Must stop")
