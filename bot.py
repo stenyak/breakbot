@@ -27,7 +27,7 @@ def channels_from_contacts(contacts):
     return channels
     
 class Bot(threading.Thread):
-    def __init__(self, wa_phone, wa_identifier, contacts, irc_server, irc_port, owner_nick, log_file):
+    def __init__(self, wa_phone, wa_password, contacts, irc_server, irc_port, owner_nick, log_file):
         threading.Thread.__init__(self)
         self.must_run = True
         self.irc_server = irc_server
@@ -37,10 +37,10 @@ class Bot(threading.Thread):
         self.log_file = log_file
         irc_nick = contacts[wa_phone]
         self.irc_nick = irc_nick
-        self.wa_identifier = wa_identifier
+        self.wa_password = wa_password
         self.contacts = contacts
         self.irc_i = IRCInterface(self.irc_server, self.irc_port, self.irc_nick, channels_from_contacts(self.contacts), self.irc_msg_received, self.stop)
-        self.wa_i = WAInterface(self.wa_phone, self.wa_identifier, self.wa_msg_received, self.stop)
+        self.wa_i = WAInterface(self.wa_phone, self.wa_password, self.wa_msg_received, self.stop)
     @catch_them_all
     def run(self):
         try:
@@ -139,7 +139,7 @@ with open("config.json.bak", "w") as f:
     json.dump(config, f, indent=4)
 
 info("Program started")
-b = Bot(cfg["wa_phone"], cfg["wa_id"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]), cfg["bot_owner_nick"], cfg["log_file"])
+b = Bot(cfg["wa_phone"], cfg["wa_password"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]), cfg["bot_owner_nick"], cfg["log_file"])
 try:
     b.start()
     while b.must_run:

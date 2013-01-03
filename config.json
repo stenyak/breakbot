@@ -11,7 +11,7 @@
     },
     "config": {
         "wa_phone": "34555555125",
-        "wa_id": "",
+        "wa_password": "JiO[base 64 encoded pass]AE=",
         "irc_nick": "my_bot",
         "irc_server_name": "irc.freenode.net",
         "irc_server_port": "6667",

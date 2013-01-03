@@ -6,20 +6,20 @@ from message import Message
 from timestamp import Timestamp
 from catch_them_all import catch_them_all
 
-from Yowsup.Tools.utilities import Utilities
+import base64
 from Yowsup.connectionmanager import YowsupConnectionManager
 import time
 from log import info, error
 
 class WAInterface(threading.Thread):
-    def __init__(self, username, identity, msg_handler, stopped_handler):
+    def __init__(self, username, password, msg_handler, stopped_handler):
         threading.Thread.__init__(self)
         self.connected = False
         self.must_run = True
         self.msg_handler = msg_handler
         self.stopped_handler = stopped_handler
         self.username = username
-        self.identity = identity
+        self.password = base64.b64decode(password)
         self.cm = YowsupConnectionManager()
         self.cm.setAutoPong(True)
         self.signalsInterface = self.cm.getSignalsInterface()
@@ -78,12 +78,12 @@ class WAInterface(threading.Thread):
         try:
             info("Connecting as %s" %self.username)
             self.must_run = True
-            self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
+            self.methodsInterface.call("auth_login", (self.username, self.password))
             self.wait_connected()
             info("Connected as %s" %self.username)
             while self.must_run:
                 if not self.connected:
-                    self.methodsInterface.call("auth_login", (self.username, Utilities.getPassword(self.identity)))
+                    self.methodsInterface.call("auth_login", (self.username, self.password))
                 time.sleep(0.5)
                 #raw_input()
         finally:

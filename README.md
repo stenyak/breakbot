@@ -34,7 +34,7 @@ Getting started
 
 ### Requisites
 
-You'll need a WhatsApp account (phone number + unique identifier) that Breakbot will use.
+You'll need a WhatsApp account (phone number + passsword) that Breakbot will use.
 
 Note that WhatsApp does **not** allow simultaneous connections, so you may want to get a secondary phone number for your Breakbot (e.g.: buy a second SIM card, or get a free number at [fonyou](www.fonyou.es), etc). Otherwise the bot would log you out of your phone's WhatsApp client.
 
@@ -51,7 +51,7 @@ Steps:
 3. Add your bots to whatever WhatsApp group chats you want to bridge.
 4. [optional] Register the phone number against WhatsApp account using the last two options of `python Yowsup/yowsup-cli -h`.
 5. Initial setup: open `config.json`, go to `config` section, and customize all the fields.
- * `wa_id` is the second field described in the `Your Login Credentials` section at [yowsup-cli docs](https://github.com/tgalal/yowsup/wiki/yowsup-cli)
+ * `wa_password` is the base64-encoded passsword as returned by the `--exists` option of [yowsup-cli](https://github.com/tgalal/yowsup/wiki/yowsup-cli)
  * `wa_phone` is the phone number used by the bot to connect to WhatsApp. See `Requisites` above.
  * `irc_*` parameters are what you expect.
  * `bot_owner_nick` is the irc nick of the bot owner (needed for private messaging).
