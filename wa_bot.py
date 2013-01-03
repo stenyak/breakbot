@@ -103,8 +103,9 @@ class WAInterface(threading.Thread):
         self.connected = True
         self.methodsInterface.call("ready")
     @catch_them_all
-    def onAuthFailed(self, username, err):
-        info("Auth Failed!")
+    def onAuthFailed(self, username, reason):
+        info("Auth Failed: %s" %reason)
+        self.connected = False
     @catch_them_all
     def onDisconnected(self, reason):
         info("Disconnected because %s" %reason)
