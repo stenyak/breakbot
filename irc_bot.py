@@ -64,7 +64,7 @@ class IRCInterface(threading.Thread):
         self.channels_joined[channel] = False
         info("Left channel %s" %channel)
         if self.must_run:
-            self.join_channels(self.conn)
+            self.join_channels()
     def connect(self):
         info("Connecting to server")
         self.server_connected = False
@@ -72,11 +72,15 @@ class IRCInterface(threading.Thread):
         while not self.server_connected:
             if not self.must_run:
                 raise Exception("Must stop")
-            self.conn.next()
+            self.next()
         info("Connected to server")
     def next(self):
         try:
-            self.conn.next
+            self.conn.next()
+        except Exception, e:
+            tiem.sleep(0.05)
+            error("Couldn't process connection: %s" %e)
+            self.connect()
     def join_channels(self):
         for c in self.channels:
             if not c in self.channels_joined or self.channels_joined[c] == False:
@@ -95,11 +99,11 @@ class IRCInterface(threading.Thread):
         while not self.pending_channels():
             if not self.must_run:
                 raise Exception("Must stop")
-            self.conn.next()
+            self.next()
         self.connected = True
         info("%s connected to %s:%s" %(self.nick, self.host, self.port))
         while self.must_run:
-            self.conn.next()
+            self.next()
             time.sleep(0.1)
             if not self.send_queue.empty():
                 text = self.send_queue.get()
