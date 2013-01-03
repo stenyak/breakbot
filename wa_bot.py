@@ -24,6 +24,8 @@ class WAInterface(threading.Thread):
         self.cm.setAutoPong(True)
         self.signalsInterface = self.cm.getSignalsInterface()
         self.methodsInterface = self.cm.getMethodsInterface()
+        self.signalsInterface.registerListener("notification_groupPictureUpdated", self.onGroup_PictureUpdated)
+        self.signalsInterface.registerListener("group_gotPicture", self.onGroup_PictureGot)
         self.signalsInterface.registerListener("group_imageReceived", self.onGroup_ImageReceived)
         self.signalsInterface.registerListener("image_received", self.onImageReceived)
         self.signalsInterface.registerListener("group_videoReceived", self.onGroup_VideoReceived)
@@ -55,6 +57,19 @@ class WAInterface(threading.Thread):
         if receiptRequested and sendReceipts:
             self.wait_connected()
             self.methodsInterface.call("message_ack", (jid, messageId))
+    @catch_them_all
+    def onGroup_PictureUpdated(self, jid, author, timestamp, messageId, receiptRequested):
+        self.methodsInterface.call("group_getPicture", (jid,))
+        sendReceipts = True
+        if receiptRequested and sendReceipts:
+            self.wait_connected()
+            self.methodsInterface.call("message_ack", (jid, messageId))
+    @catch_them_all
+    def onGroup_PictureGot(self, jid, filePath):
+        #TODO: upload filePath to services like imgur (or even upload as whatsapp picture, hah!) instead of displaying local file path here:
+        messageContent = unicode("[ group picture: %s ]"%filePath, "utf-8")
+        message = Message(kind="wa", nick_full="unknown", chan=jid, msg=messageContent)
+        self.msg_handler(message)
     @catch_them_all
     def onGroup_ImageReceived(self, messageId, jid, author, preview, url, size, receiptRequested):
         messageContent = unicode("[ image: %s ]"%url, "utf-8")
