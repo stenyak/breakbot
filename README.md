@@ -12,7 +12,7 @@ It currently supports:
 
  * WhatsApp group chats <-> IRC rooms gatewaying.
  * WhatsApp phone numbers <-> IRC nick conversion.
- * WhastApp image attachments.
+ * WhastApp image and video attachments.
  * Private messaging
 
 Things it does **not** currently support:

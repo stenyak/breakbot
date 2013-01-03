@@ -26,6 +26,8 @@ class WAInterface(threading.Thread):
         self.methodsInterface = self.cm.getMethodsInterface()
         self.signalsInterface.registerListener("group_imageReceived", self.onGroup_ImageReceived)
         self.signalsInterface.registerListener("image_received", self.onImageReceived)
+        self.signalsInterface.registerListener("group_videoReceived", self.onGroup_VideoReceived)
+        self.signalsInterface.registerListener("videoimage_received", self.onVideoReceived)
         self.signalsInterface.registerListener("message_received", self.onMessageReceived)
         self.signalsInterface.registerListener("group_messageReceived", self.onGroup_MessageReceived)
         self.signalsInterface.registerListener("auth_success", self.onAuthSuccess)
@@ -56,6 +58,24 @@ class WAInterface(threading.Thread):
     @catch_them_all
     def onGroup_ImageReceived(self, messageId, jid, author, preview, url, size, receiptRequested):
         messageContent = unicode("[ image: %s ]"%url, "utf-8")
+        message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
+        self.msg_handler(message)
+        sendReceipts = True
+        if receiptRequested and sendReceipts:
+            self.wait_connected()
+            self.methodsInterface.call("message_ack", (jid, messageId))
+    @catch_them_all
+    def onVideoReceived(self, messageId, jid, preview, url, size, receiptRequested):
+        messageContent = unicode("[ video: %s ]"%url, "utf-8")
+        message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
+        self.msg_handler(message)
+        sendReceipts = True
+        if receiptRequested and sendReceipts:
+            self.wait_connected()
+            self.methodsInterface.call("message_ack", (jid, messageId))
+    @catch_them_all
+    def onGroup_VideoReceived(self, messageId, jid, author, preview, url, size, receiptRequested):
+        messageContent = unicode("[ video: %s ]"%url, "utf-8")
         message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
         self.msg_handler(message)
         sendReceipts = True
