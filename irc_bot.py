@@ -78,7 +78,7 @@ class IRCInterface(threading.Thread):
         try:
             self.conn.next()
         except Exception, e:
-            tiem.sleep(0.05)
+            time.sleep(0.05)
             error("Couldn't process connection: %s" %e)
             self.connect()
     def join_channels(self):
