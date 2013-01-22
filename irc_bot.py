@@ -72,7 +72,7 @@ class IRCInterface(threading.Thread):
         while not self.server_connected:
             if not self.must_run:
                 raise Exception("Must stop")
-            self.next()
+            self.conn.next()
         info("Connected to server")
     def next(self):
         try:
