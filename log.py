@@ -6,6 +6,7 @@ import inspect
 import traceback
 import sys
 
+logfile=open("bot.log", "a", buffering=0)
 def log(text, timestamp = None):
     def path_leaf(path):
         head, tail = ntpath.split(path)
@@ -16,7 +17,9 @@ def log(text, timestamp = None):
     log_type = log_type[0].upper() * 2 # II for info, EE for error...
     if timestamp is None:
         timestamp = Timestamp()
-    print "%s %s %s:%s: %s" %(timestamp.to_human_str(), log_type, filename, line_number, text)
+    text = "%s %s %s:%s: %s" %(timestamp.to_human_str(), log_type, filename, line_number, text)
+    print text
+    logfile.write("\n%s" %text)
 def info(text):
     log(text)
 def error(text):
