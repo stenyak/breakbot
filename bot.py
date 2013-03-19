@@ -8,6 +8,7 @@ from irc_bot import IRCInterface
 from wa_bot import WAInterface
 from log import info, error
 from catch_them_all import catch_them_all
+import traceback
 
 def store_msg(message, file_path=None):
     if file_path is None:
@@ -89,8 +90,9 @@ class Bot(threading.Thread):
             try:
                 group = self.get_group_from_chan(self.contacts, message.chan)
                 self.wa_i.send(group, msg)
-            except:
-                info("Cannot send message to channel %s" %message.chan)
+            except Exception, e:
+                error(traceback.print_exc())
+                error("Cannot send message to channel %s: %s" %(message.chan, e))
 
     @catch_them_all
     def wa_msg_received(self, message):
