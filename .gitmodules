@@ -1,0 +1,3 @@
+[submodule "yowsup.git"]
+	path = yowsup.git
+	url = git@github.com:stenyak/yowsup.git
