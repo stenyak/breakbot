@@ -11,11 +11,21 @@ from oyoyo.client import IRCClient
 from oyoyo.cmdhandler import DefaultCommandHandler
 from message import Message
 
+import binascii
+
 class Handler(DefaultCommandHandler):
     # Handle messages (the PRIVMSG command, note lower case)
     @catch_them_all
     def privmsg(self, nick_full, chan, msg):
-        msg = unicode(msg, "utf-8")
+        try:
+            msg = unicode(msg, "utf-8")
+        except UnicodeDecodeError:
+            try:
+                msg = unicode(msg, "latin-1")
+            except UnicodeDecodeError:
+                hexa = binascii.hexlify(msg)
+                error("Could not decode message: binascii.unhexlify(\"%s\")" %hexa)
+                raise
         m = Message("irc", nick_full, chan, msg)
         self.irc_interface.msg_handler(m)
     def set_irc_interface(self, irc_interface):

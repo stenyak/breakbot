@@ -99,7 +99,6 @@ class WAInterface(threading.Thread):
             self.methodsInterface.call("message_ack", (jid, messageId))
     @catch_them_all
     def onGroup_MessageReceived(self, messageId, jid, author, messageContent, timestamp, wantsReceipt, pushName):
-        messageContent = unicode(messageContent, "utf-8")
         message = Message(kind="wa", nick_full=author, chan=jid, msg=messageContent)
         message.time = Timestamp(ms_int = timestamp*1000)
         self.msg_handler(message)
