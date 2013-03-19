@@ -75,7 +75,6 @@ class Bot(threading.Thread):
         info(" <<< Received IRC message: %s" %message)
 
         if message.chan == self.irc_nick:
-            info("Private message")
             if message.target is None:
                 raise Exception("Private message sent to no one?")
             try:
@@ -86,7 +85,6 @@ class Bot(threading.Thread):
             msg = "<%s> %s" %(message.get_nick(), message.msg.split(":", 1)[1])
             self.wa_i.send(wa_target, msg)
         else:
-            info("Group message")
             msg = "<%s> %s" %(message.get_nick(), message.msg)
             try:
                 group = self.get_group_from_chan(self.contacts, message.chan)
