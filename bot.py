@@ -73,7 +73,7 @@ class Bot(threading.Thread):
     @catch_them_all
     def irc_msg_received(self, message):
         store_msg(message, self.log_file)
-        info(" <<< Received IRC message: %s" %message)
+        info(" <<< IRC %s" %message)
 
         if message.chan == self.irc_nick:
             if message.target is None:
@@ -97,7 +97,7 @@ class Bot(threading.Thread):
     @catch_them_all
     def wa_msg_received(self, message):
         store_msg(message, self.log_file)
-        info(" <<< Received WA message: %s" %message)
+        info(" <<< WA %s" %message)
         if message.chan == self.wa_phone:
             #private message
             if message.target is None:

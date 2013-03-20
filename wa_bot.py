@@ -130,7 +130,7 @@ class WAInterface(threading.Thread):
     def send(self, target, text):
         self.wait_connected()
         self.methodsInterface.call("message_send", (target, text.encode("utf-8")))
-        info((" >>> Sent WA message: %s: %s" %(target, text)).encode("utf-8"))
+        info((" >>> WA %s: %s" %(target, text)).encode("utf-8"))
     @catch_them_all
     def onAuthSuccess(self, username):
         info("Authed %s" % username)

@@ -117,7 +117,7 @@ class IRCInterface(threading.Thread):
             time.sleep(0.1)
             if not self.send_queue.empty():
                 text = self.send_queue.get()
-                info((" >>> Sending IRC message: %s" %text).encode("utf-8"))
+                info((" >>> IRC %s" %text).encode("utf-8"))
                 self.cli.send(text)
                 time.sleep(0.5) #throttle message sending in order to avoid excess flood kick
         self.cli.send("QUIT :a la mieeerrrrda")
@@ -129,7 +129,7 @@ class IRCInterface(threading.Thread):
     def stop(self):
         self.must_run = False
     def send(self, channel, text):
-        info((" >>> Enqueueing IRC message: %s: %s" %(channel, text)).encode("utf-8"))
+        info((" ->- IRC %s: %s" %(channel, text)).encode("utf-8"))
         msg = "PRIVMSG %s :%s" %(channel, text)
         self.send_queue.put(msg)
     def wait_connected(self):
