@@ -82,7 +82,13 @@ class IRCInterface(threading.Thread):
         while not self.server_connected:
             if not self.must_run:
                 raise Exception("Must stop")
-            self.conn.next()
+            try:
+                self.conn.next()
+            except Exception, e:
+                error("Problems while connecting to IRC server: %s" %e)
+                self.stop()
+                self.disconnected()
+
         info("Connected to server")
     def next(self):
         try:
@@ -90,6 +96,7 @@ class IRCInterface(threading.Thread):
         except Exception, e:
             time.sleep(0.05)
             error("Couldn't process connection: %s" %e)
+            del self.conn
             self.connect()
     def join_channels(self):
         for c in self.channels:
@@ -122,6 +129,8 @@ class IRCInterface(threading.Thread):
                 time.sleep(0.5) #throttle message sending in order to avoid excess flood kick
         self.cli.send("QUIT :a la mieeerrrrda")
         info("%s disconnected from %s:%s" %(self.nick, self.host, self.port))
+        self.disconnected()
+    def disconnected(self):
         self.connected = False
         del self.conn
         self.stopped_handler()
