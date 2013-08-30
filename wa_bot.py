@@ -58,7 +58,7 @@ class WAInterface(threading.Thread):
             self.wait_connected()
             self.methodsInterface.call("message_ack", (jid, messageId))
     @catch_them_all
-    def onGroup_PictureUpdated(self, jid, author, timestamp, messageId, receiptRequested):
+    def onGroup_PictureUpdated(self, jid, author, timestamp, messageId, pictureId, receiptRequested):
         self.methodsInterface.call("group_getPicture", (jid,))
         sendReceipts = True
         if receiptRequested and sendReceipts:
