@@ -97,36 +97,40 @@ class Bot(threading.Thread):
     @catch_them_all
     def wa_msg_received(self, message):
         store_msg(message, self.log_file)
+        lines = message.msg.strip().split("\n") #split multiline messages
         info(" <<< WA %s" %message)
         if message.chan == self.wa_phone:
             #private message
             if message.target is None:
                 # directed to bot itself
                 nick = self.contacts[message.get_nick()]
-                irc_msg = "<%s> %s" %(nick, message.msg)
                 irc_target = self.contacts[message.nick_full.split("@")[0]]
-                self.irc_i.send(self.owner_nick, irc_msg)
+                for line in lines:
+                    irc_msg = "<%s> %s" %(nick, line)
+                    self.irc_i.send(self.owner_nick, irc_msg)
             else:
                 # directed to someone
                 try:
                     phone = message.get_nick()
                     nick = self.contacts[phone]
                     target = self.get_group_from_chan(self.contacts, message.target)
-                    msg = "<%s> %s" %(target, message.msg)
-                    self.irc_i.send(target, msg)
+                    for line in lines:
+                        msg = "<%s> %s" %(target, line)
+                        self.irc_i.send(target, msg)
                 except:
                     error("Couldn't relay directed WA msg to IRC")
         else:
             #group message
-            try:
-                msg = "<%s> %s" %(self.contacts[message.get_nick()], message.msg)
-            except:
-                error("Contact not recognized")
-                msg = "<%s> %s" %(message.get_nick(), message.msg)
-            try:
-                self.irc_i.send(self.contacts[message.chan], msg)
-            except:
-                error("Channel %s not recognized" %(message.chan))
+            for line in lines:
+                try:
+                    msg = "<%s> %s" %(self.contacts[message.get_nick()], line)
+                except:
+                    error("Contact not recognized")
+                    msg = "<%s> %s" %(message.get_nick(), line)
+                try:
+                    self.irc_i.send(self.contacts[message.chan], msg)
+                except:
+                    error("Channel %s not recognized" %(message.chan))
 
 import json
 with open("config.json", "r") as f:
