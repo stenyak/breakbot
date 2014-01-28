@@ -2,6 +2,7 @@
 # Copyright 2012 Bruno Gonzalez
 # This software is released under the GNU AFFERO GENERAL PUBLIC LICENSE (see agpl-3.0.txt or www.gnu.org/licenses/agpl-3.0.html)
 import threading
+from datetime import datetime
 import time
 from log import info, error
 from catch_them_all import catch_them_all
@@ -31,6 +32,10 @@ class Handler(DefaultCommandHandler):
     def set_irc_interface(self, irc_interface):
         self.irc_interface = irc_interface
     @catch_them_all
+    def ping(self, prefix, server):
+        DefaultCommandHandler.ping(self, prefix, server)
+        self.irc_interface.ping()
+    @catch_them_all
     def join(self, nick_full, channel):
         self.irc_interface.joined(channel)
     @catch_them_all
@@ -45,6 +50,7 @@ class IRCInterface(threading.Thread):
         threading.Thread.__init__(self)
         self.must_run = True
         self.connected = False
+        self.pinged = False
         self.msg_handler = msg_handler
         self.stopped_handler = stopped_handler
         self.nick = nick
@@ -75,7 +81,25 @@ class IRCInterface(threading.Thread):
         info("Left channel %s" %channel)
         if self.must_run:
             self.join_channels()
+    def ping(self):
+        self.pinged = True
     def connect(self):
+        def wait_for_possible_ping(timeout):
+            """ Some IRC servers won't allow joining channels until you've replied to a PING.
+                We don't know in advance which servers PING and which don't, so we wait for `timeout` seconds before assuming it's the kind of server that doesn't PING. """
+            start = datetime.now()
+            while not self.pinged:
+                if (datetime.now() - start).seconds > timeout:
+                    info("Server hasn't pinged in %s seconds, go on with our life." %timeout)
+                    break
+                if not self.must_run:
+                    raise Exception("Must stop")
+                try:
+                    self.conn.next()
+                except Exception, e:
+                    error("Problems while waiting for IRC server ping: %s" %e)
+                    self.stop()
+                    self.disconnected()
         info("Connecting to server")
         self.server_connected = False
         self.conn = self.cli.connect()
@@ -88,6 +112,7 @@ class IRCInterface(threading.Thread):
                 error("Problems while connecting to IRC server: %s" %e)
                 self.stop()
                 self.disconnected()
+        wait_for_possible_ping(timeout=2)
 
         info("Connected to server")
     def next(self):
