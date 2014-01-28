@@ -40,7 +40,6 @@ class WAInterface(threading.Thread):
         self.signalsInterface.registerListener("ping", self.onPing)
     @catch_them_all
     def onMessageReceived(self, messageId, jid, messageContent, timestamp, wantsReceipt, pushName):
-        messageContent = unicode(messageContent, "utf-8")
         message = Message(kind="wa", nick_full=jid, chan=self.username, msg=messageContent)
         message.time = Timestamp(ms_int = timestamp*1000)
         self.msg_handler(message)
