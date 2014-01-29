@@ -77,7 +77,7 @@ class Bot(threading.Thread):
 
         if message.chan == self.irc_nick:
             if message.target is None:
-                raise Exception("Private message sent to no one?")
+                raise Exception("Target not specified. Please prefix you private messages with a nickname (e.g. 'person1: hello') or phone number (e.g. '+34555555373: hello')")
             try:
                 wa_target = self.contacts[message.target] #try by phone
             except KeyError:
