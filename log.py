@@ -22,6 +22,8 @@ def log(text, timestamp = None):
     logfile.write("\n%s" %text)
 def info(text):
     log(text)
+def warning(text):
+    log(text)
 def error(text):
     time = Timestamp()
     t, _, _ = sys.exc_info()

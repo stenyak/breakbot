@@ -6,7 +6,7 @@ import threading
 import time
 from irc_bot import IRCInterface
 from wa_bot import WAInterface
-from log import info, error
+from log import info, error, warning
 from catch_them_all import catch_them_all
 import traceback
 
@@ -46,20 +46,18 @@ class Bot(threading.Thread):
     def run(self):
         try:
             self.must_run = True
-            info("Starting IRC")
+            info("Connecting IRC client (%s@%s:%s)" %(self.irc_nick, self.irc_server, self.irc_port))
             self.irc_i.start()
-            info("Waiting for IRC")
             self.irc_i.wait_connected()
-            info("Starting WA")
+            info("Connecting WA client (%s)" %self.wa_phone)
             self.wa_i.start()
-            info("Waiting for WA")
             self.wa_i.wait_connected()
-            info("Main loop running")
+            info("Bot ready.")
         except:
             info("Main loop closing")
             self.stop()
     def stop(self):
-        info("Stop instructed, about to stop main loop")
+        info("Bot stopping...")
         self.must_run = False
         self.irc_i.stop()
         self.wa_i.stop()
@@ -91,7 +89,6 @@ class Bot(threading.Thread):
                 group = self.get_group_from_chan(self.contacts, message.chan)
                 self.wa_i.send(group, msg)
             except Exception, e:
-                error(traceback.print_exc())
                 error("Cannot send message to channel %s: %s" %(message.chan, e))
 
     @catch_them_all
@@ -125,12 +122,12 @@ class Bot(threading.Thread):
                 try:
                     msg = "<%s> %s" %(self.contacts[message.get_nick()], line)
                 except:
-                    error("Contact not recognized")
+                    warning("Contact not recognized")
                     msg = "<%s> %s" %(message.get_nick(), line)
                 try:
                     self.irc_i.send(self.contacts[message.chan], msg)
                 except:
-                    error("Channel %s not recognized" %(message.chan))
+                    warning("Channel %s not recognized" %(message.chan))
 
 import json
 with open("config.json", "r") as f:
@@ -138,18 +135,18 @@ with open("config.json", "r") as f:
 contacts = config["contacts"]
 cfg = config["config"]
 
-info("Contact list: %s" %contacts)
+info("%s contacts loaded from configuration file" %len(contacts))
 with open("config.json.bak", "w") as f:
     json.dump(config, f, indent=4)
 
-info("Program started")
 b = Bot(cfg["wa_phone"], cfg["wa_password"], contacts, cfg["irc_server_name"], int(cfg["irc_server_port"]), cfg["bot_owner_nick"], cfg["log_file"])
 try:
     b.start()
     while b.must_run:
         time.sleep(0.5)
 except KeyboardInterrupt:
-    error("User wants to stop")
+    print ""
+    warning("User wants to stop")
 finally:
     b.stop()
-info("Program finished")
+info("Bot stopped.")

@@ -109,11 +109,9 @@ class WAInterface(threading.Thread):
     @catch_them_all
     def run(self):
         try:
-            info("Connecting as %s" %self.username)
             self.must_run = True
             self.methodsInterface.call("auth_login", (self.username, self.password))
             self.wait_connected()
-            info("Connected as %s" %self.username)
             while self.must_run:
                 if not self.connected:
                     self.methodsInterface.call("auth_login", (self.username, self.password))
@@ -132,7 +130,7 @@ class WAInterface(threading.Thread):
         info((" >>> WA %s: %s" %(target, text)).encode("utf-8"))
     @catch_them_all
     def onAuthSuccess(self, username):
-        info("Authed %s" % username)
+        info("Connected WA client (%s)" %username)
         self.connected = True
         self.methodsInterface.call("ready")
     @catch_them_all
@@ -141,7 +139,7 @@ class WAInterface(threading.Thread):
         self.connected = False
     @catch_them_all
     def onDisconnected(self, reason):
-        info("Disconnected because %s" %reason)
+        info("Disconnected WA client (%s): %s" %(self.username, reason))
         self.connected = False
     @catch_them_all
     def onMessageSent(self, jid, messageId):

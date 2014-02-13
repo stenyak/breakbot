@@ -75,7 +75,6 @@ class IRCInterface(threading.Thread):
         return result
     def joined(self, channel):
         self.channels_joined[channel] = True
-        info("Joined channel %s" %channel)
     def parted(self, channel):
         self.channels_joined[channel] = False
         info("Left channel %s" %channel)
@@ -90,22 +89,20 @@ class IRCInterface(threading.Thread):
             start = datetime.now()
             while not self.pinged:
                 if (datetime.now() - start).seconds > timeout:
-                    info("Server hasn't pinged in %s seconds, go on with our life." %timeout)
-                    break
+                    break # server probably will never ping us, so just go on with our life
                 if not self.must_run:
-                    raise Exception("Must stop")
+                    raise Exception("Stopped while waiting for IRC server ping")
                 try:
                     self.conn.next()
                 except Exception, e:
                     error("Problems while waiting for IRC server ping: %s" %e)
                     self.stop()
                     self.disconnected()
-        info("Connecting to server")
         self.server_connected = False
         self.conn = self.cli.connect()
         while not self.server_connected:
             if not self.must_run:
-                raise Exception("Must stop")
+                raise Exception("Stopped while waiting for IRC connection")
             try:
                 self.conn.next()
             except Exception, e:
@@ -113,8 +110,6 @@ class IRCInterface(threading.Thread):
                 self.stop()
                 self.disconnected()
         wait_for_possible_ping(timeout=2)
-
-        info("Connected to server")
     def next(self):
         try:
             self.conn.next()
@@ -124,26 +119,25 @@ class IRCInterface(threading.Thread):
             del self.conn
             self.connect()
     def join_channels(self):
+        info("Joining channels: %s" %(", ".join(self.channels)))
         for c in self.channels:
             if not c in self.channels_joined or self.channels_joined[c] == False:
-                info("Joining channel %s" %c)
                 self.cli.send("JOIN", c)
             while self.pending_channels():
                 if not self.must_run:
-                    raise Exception("Must stop")
+                    raise Exception("Stopped while waiting to join channels")
                 self.conn.next()
     @catch_them_all
     def run(self):
         self.must_run = True
-        info("%s connecting to %s:%s" %(self.nick, self.host, self.port))
         self.connect()
         self.join_channels()
         while not self.pending_channels():
             if not self.must_run:
-                raise Exception("Must stop")
+                raise Exception("Stopped while waiting to join channels")
             self.next()
         self.connected = True
-        info("%s connected to %s:%s" %(self.nick, self.host, self.port))
+        info("Connected IRC client (%s@%s:%s)" %(self.nick, self.host, self.port))
         while self.must_run:
             self.next()
             time.sleep(0.1)
@@ -152,10 +146,10 @@ class IRCInterface(threading.Thread):
                 info((" >>> IRC %s" %text).encode("utf-8"))
                 self.cli.send(text)
                 time.sleep(0.5) #throttle message sending in order to avoid excess flood kick
-        self.cli.send("QUIT :a la mieeerrrrda")
-        info("%s disconnected from %s:%s" %(self.nick, self.host, self.port))
+        self.cli.send("QUIT :breakbot out")
         self.disconnected()
     def disconnected(self):
+        info("Disconnected IRC client (%s@%s:%s)" %(self.nick, self.host, self.port))
         self.connected = False
         del self.conn
         self.stopped_handler()
@@ -169,5 +163,5 @@ class IRCInterface(threading.Thread):
     def wait_connected(self):
         while not self.connected:
             if not self.must_run:
-                raise Exception("IRC: bot does not intend to connect")
+                raise Exception("Stopped while waiting to connect")
             time.sleep(0.1)
