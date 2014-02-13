@@ -26,7 +26,7 @@ def channels_from_contacts(contacts):
         if v.startswith("#"):
             channels.append(v)
     return channels
-    
+
 class Bot(threading.Thread):
     def __init__(self, wa_phone, wa_password, contacts, irc_server, irc_port, owner_nick, log_file):
         threading.Thread.__init__(self)
