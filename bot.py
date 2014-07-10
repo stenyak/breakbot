@@ -62,9 +62,9 @@ class Bot(threading.Thread):
         self.irc_i.stop()
         self.wa_i.stop()
 
-    def get_group_from_chan(self, contacts, irc_channel):
+    def get_wa_id_from_name(self, contacts, name):
         for k,v in contacts.items():
-            if v.lower() == irc_channel.lower():
+            if v.lower() == name.lower():
                 return k
         raise Exception("Channel not found in contact list")
 
@@ -79,14 +79,14 @@ class Bot(threading.Thread):
             try:
                 wa_target = self.contacts[message.target] #try by phone
             except KeyError:
-                wa_target = self.get_group_from_chan(self.contacts, message.target) #try by nick
+                wa_target = self.get_wa_id_from_name(self.contacts, message.target) #try by nick
             wa_target += "@s.whatsapp.net"
             msg = "<%s> %s" %(message.get_nick(), message.msg.split(":", 1)[1])
             self.wa_i.send(wa_target, msg)
         else:
             msg = "<%s> %s" %(message.get_nick(), message.msg)
             try:
-                group = self.get_group_from_chan(self.contacts, message.chan)
+                group = self.get_wa_id_from_name(self.contacts, message.chan)
                 self.wa_i.send(group, msg)
             except Exception, e:
                 error("Cannot send message to channel %s: %s" %(message.chan, e))
@@ -110,7 +110,7 @@ class Bot(threading.Thread):
                 try:
                     phone = message.get_nick()
                     nick = self.contacts[phone]
-                    target = self.get_group_from_chan(self.contacts, message.target)
+                    target = self.get_wa_id_from_name(self.contacts, message.target)
                     for line in lines:
                         msg = "<%s> %s" %(target, line)
                         self.irc_i.send(target, msg)
