@@ -66,7 +66,7 @@ class Bot(threading.Thread):
         for k,v in contacts.items():
             if v.lower() == name.lower():
                 return k
-        raise Exception("Name %s not found in contact list" %name)
+        raise KeyError("Name %s not found in contact list" %name)
 
     @catch_them_all
     def irc_msg_received(self, message):
@@ -76,10 +76,14 @@ class Bot(threading.Thread):
         if message.chan == self.irc_nick:
             if message.target is None:
                 raise Exception("Target not specified. Please prefix you private messages with a nickname (e.g. 'person1: hello') or phone number (e.g. '+34555555373: hello')")
-            try:
-                wa_target = self.contacts[message.target] #try by phone
-            except KeyError:
-                wa_target = self.get_wa_id_from_name(self.contacts, message.target) #try by nick
+            wa_target = message.target
+            if message.target not in self.contacts:
+                try:
+                    wa_target = self.get_wa_id_from_name(self.contacts, message.target) #get by nick
+                except KeyError:
+                    if not wa_target.isdigit():
+                        raise Exception("Whatsapp identifier '%s' not found in contact list, and does not look like a phone number" %message.target)
+                    warning("Phone number '%s' not found in contact list. Trying to send anyway..." %message.target)
             wa_target += "@s.whatsapp.net"
             msg = "<%s> %s" %(message.get_nick(), message.msg.split(":", 1)[1])
             self.wa_i.send(wa_target, msg)
