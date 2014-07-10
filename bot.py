@@ -85,7 +85,7 @@ class Bot(threading.Thread):
                         raise Exception("Whatsapp identifier '%s' not found in contact list, and does not look like a phone number" %message.target)
                     warning("Phone number '%s' not found in contact list. Trying to send anyway..." %message.target)
             wa_target += "@s.whatsapp.net"
-            msg = "<%s> %s" %(message.get_nick(), message.msg.split(":", 1)[1])
+            msg = "<%s> %s" %(message.get_nick(), message.msg)
             self.wa_i.send(wa_target, msg)
         else:
             msg = "<%s> %s" %(message.get_nick(), message.msg)
