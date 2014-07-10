@@ -113,11 +113,10 @@ class Bot(threading.Thread):
                 # directed to someone
                 try:
                     phone = message.get_nick()
-                    nick = self.contacts[phone]
-                    target = self.get_wa_id_from_name(self.contacts, message.target)
+                    source_nick = self.contacts[phone]
                     for line in lines:
-                        msg = "<%s> %s" %(target, line)
-                        self.irc_i.send(target, msg)
+                        msg = "<%s> %s" %(source_nick, line)
+                        self.irc_i.send(message.target, msg)
                 except:
                     error("Couldn't relay directed WA msg to IRC")
         else:
