@@ -66,7 +66,7 @@ class Bot(threading.Thread):
         for k,v in contacts.items():
             if v.lower() == name.lower():
                 return k
-        raise Exception("Channel not found in contact list")
+        raise Exception("Name %s not found in contact list" %name)
 
     @catch_them_all
     def irc_msg_received(self, message):
