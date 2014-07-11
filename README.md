@@ -34,7 +34,7 @@ Getting started
 
 ### Requisites
 
-You'll need a WhatsApp account (phone number + passsword) that Breakbot will use.
+You'll need a WhatsApp account (phone number + password) that Breakbot will use.
 
 Note that WhatsApp does **not** allow simultaneous connections, so you may want to get a secondary phone number for your Breakbot (e.g.: buy a second SIM card, or get a free number at [fonyou](www.fonyou.es), etc). Otherwise the bot would log you out of your phone's WhatsApp client.
 
@@ -42,7 +42,7 @@ You can register a WhatsApp account for your number without an actual physical p
 
 ### Configuration
 
-Note: all phone numbers must be specified as `international number` without `00` or `+`. *E.g: spanish number `600600600` would become `34600600600`*
+Note: all phone numbers must be specified as `international number` without `00` or `+`. *E.g: Spanish number `600600600` would become `34600600600`*
 
 Steps:
 
@@ -51,10 +51,10 @@ Steps:
 3. Add your bots to whatever WhatsApp group chats you want to bridge.
 4. [optional] Register the phone number against WhatsApp account using the last two options of `python Yowsup/yowsup-cli -h`.
 5. Initial setup: open `config.json`, go to `config` section, and customize all the fields.
- * `wa_password` is the base64-encoded passsword as returned by the `--exists` option of [yowsup-cli](https://github.com/tgalal/yowsup/wiki/yowsup-cli)
+ * `wa_password` is the base64-encoded password as returned by the `--exists` option of [yowsup-cli](https://github.com/tgalal/yowsup/wiki/yowsup-cli)
  * `wa_phone` is the phone number used by the bot to connect to WhatsApp. See `Requisites` above.
  * `irc_*` parameters are what you expect.
- * `bot_owner_nick` is the irc nick of the bot owner (needed for private messaging).
+ * `bot_owner_nick` is the IRC nick of the bot owner (needed for private messaging).
 6. Make sure your bot nick and phone are also in the contact list.
 7. Run `python bot.py` so that it connects to WhatsApp
  * Watch the screen for strings matching `NNN-NNN@g.us`. Those are the WhastApp group chats. Write them down somewhere.
@@ -67,7 +67,7 @@ Steps:
 
 Just cross your fingers, run `python bot.py` and wait for your bot to appear at the specified IRC channels (should take about 5-10 seconds with a proper connection).
 
-Once connected, everything you say on IRC should appear on WhastApp and viceversa.
+Once connected, everything you say on IRC should appear on WhastApp and vice versa.
 
 Contact
 ------
@@ -76,5 +76,5 @@ You can notify me about problems and feature requests at the [issue tracker](htt
 
 Feel free to hack the code and send me GitHub pull requests, or traditional patches too; I'll be more than happy to merge them.
 
-For personal praise and insults, the author Bruno Gonzalez can be reached at [stenyak@stenyak.com](mailto:stenyak@stenyak.com) and `/dev/null` respectively.
+The author Bruno Gonzalez can be reached at [stenyak@stenyak.com](mailto:stenyak@stenyak.com) and `/dev/null` for personal praise and insults, respectively.
 
