@@ -36,7 +36,7 @@ Getting started
 
 You'll need a WhatsApp account (phone number + password) that Breakbot will use.
 
-Note that WhatsApp does **not** allow simultaneous connections, so you may want to get a secondary phone number for your Breakbot (e.g.: buy a second SIM card, or get a free number at [fonyou](www.fonyou.es), etc). Otherwise the bot would log you out of your phone's WhatsApp client.
+Note that WhatsApp does **not** allow simultaneous connections, so you may want to get a secondary phone number for your Breakbot (e.g.: buy a second SIM card, or get a free number at [fonyou](http://www.fonyou.es), etc). Otherwise the bot would log you out of your phone's WhatsApp client.
 
 You can register a WhatsApp account for your number without an actual physical phone, by following step #4 in the list below.
 
